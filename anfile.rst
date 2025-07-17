@@ -14,9 +14,9 @@ What is covered in this section:
   :local:
 
 .. _aci_dev_guide_intro:
-*******************
+
 Introduction
-*******************
+====================
 
 The `cisco.aci collection <https://galaxy.ansible.com/cisco/aci>`_ already includes a large number of Cisco ACI modules; however, the ACI object model is extensive, and covering all possible functionality would easily require more than 1,500 individual modules. Therefore, Cisco develops modules requested on a just-in-time basis.
 
@@ -87,7 +87,7 @@ The purpose of this section is to illustrate how to build a module based on an e
   }
 
 Documentation Section
----------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 3. In the documentation section, begin by changing the name of the module, its short description, and the description of the functions being performed on the object. The description of the module must be followed by the options, which is a list of attributes. Each attribute should include the name, description, data type, aliases (if applicable), choices (if applicable), and default (if applicable) of all the parameters that will be consumed by the object.
  * The options section includes all the parameters that will be defined in the argument_spec, such as the object_id, configurable properties of the object, parent object_id, state, etc., and these need to be documented in the same file as the module in the DOCUMENTATION section.
@@ -172,7 +172,7 @@ The format of documentation is shown below:
       """
 
 Examples Section
-----------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 5. The examples section of the copied module should be modified by adding the necessary parameters to all the examples. Please note that removing and querying an object will only contain the object name and no object parameters. "Query All" will not have any parameters other than the one that are set to required, ensuring that all the objects of the class being worked upon are returned.
 
@@ -224,7 +224,7 @@ The format of this section is shown below:
 .. note:: Ensure to test the examples since users generally copy and paste examples to use the module.
 
 Return Section
-----------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 The RETURN section is used in every module and has the same content, so copy and paste it from any module and do not modify it
 
 .. code-block:: python
@@ -235,7 +235,7 @@ current:
 """
 
 Importing objects from Python libraries
----------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 7. The following import section is generally left untouched, but if a shared method is added in the library, it might need to be imported here.
 
@@ -266,7 +266,7 @@ To understand more about the AnsibleModule, refer to the `Ansible documentation 
 The imported constants from plugins/module_utils/constants.py file define the collection of fixed values and mapping dictionaries used to standardize and normalize for ACI-specific parameters.
 
 Defining the argument_spec variable
------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 8. In the main function, the argument_spec variable defines all the arguments necessary for this module and is based on aci_argument_spec. All arguments defined previously in the documentation section are added to this variable.
 
 The **argument_spec** variable is based on **aci_argument_spec** and allows a module to accept additional parameters from the user specific to the module.
@@ -300,7 +300,7 @@ To understand what argument_spec is and how it is used, refer to the `Ansible do
 **Note**: It is recommended not to provide default values for configuration arguments. Default values could cause unintended changes to the object.
 
 Using the AnsibleModule object
-------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 The following section creates an instance of AnsibleModule and then adds to the constructor a series of properties such as the argument_spec. The module should support check-mode, which validates the working of a module without making any changes to the ACI object. The first attribute passed to the constructor is ``argument_spec``; the second argument is ``supports_check_mode``. It is highly recommended that every module support check mode in this collection. The last element is required_if, which is used to specify conditional required attributes, and since these modules support querying the APIC for all objects of the module's class, the object/parent IDs should only be required if ``state: absent`` or ``state: present``.
 
 .. code-block:: python
@@ -317,7 +317,7 @@ The following section creates an instance of AnsibleModule and then adds to the 
 9. The required_if variable has the following arguments. These arguments are not set for all states because "Query All" does not require them. However, users are still required to provide these arguments when creating or deleting something. This is why they are included in required_if, which specifies which attributes are required when state is present or absent. If any of the attributes in required_if are missing in the task that adds or deletes the object in the playbook, Ansible will immediately warn the user that the attributes are missing.
 
 Mapping variable definition
----------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 10. The above instantiation (required for all modules) is followed by code that is used to get attributes from the playbook that correspond to all the properties of objects defined in the main() function above. This is also where validations and string concatenations are performed.
 
 Once the AnsibleModule object has been instantiated as module, the necessary parameter values should be extracted from the ``module.params`` dictionary and all additional data should be validated. Usually, the only parameters that need to be extracted are those related to the ACI object configuration and its child configuration. If integer objects require validation, then the validation should be performed here.
@@ -339,7 +339,7 @@ Once the AnsibleModule object has been instantiated as module, the necessary par
   * Most type conversions, checks and validations that are done at this level are minimal and are usually done to ensure the the correct formatted data is passed further down the code.
 
 Using the ACIModule object
---------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 The ACIModule class handles most of the logic for the ACI modules. The ACIModule extends the functionality of the AnsibleModule object, so the module instance must be passed into the class instantiation.
 
 .. code-block:: python
@@ -358,107 +358,107 @@ The ACIModule has 7 main methods that are used by most modules in the collection
 
 The first 2 methods are used regardless of what value is passed to the ``state`` parameter.
 
-Constructing URLs
-^^^^^^^^^^^^^^^^^
-11. The following section constructs a filter to target a set of entries that match certain criteria at the level of the target DN and in the subtree below it. The construct_url function below is used to build the appropriate DN by using the tenant as the root class and other subsequent subclasses up to object of the module.
-
-The ``construct_url()`` method is used to dynamically build the REST API URL and query parameters to retrieve or configure ACI objects at various levels of the object hierarchy, supporting flexible depth and child class filtering for APIC requests.
-
-* When the ``state`` is not ``query``, the URL consists of the base URL (to access the APIC) combined with the distinguished name of the object (to access the object). The filter string limits the returned data to configuration information only.
-* When ``state`` is ``query``, the URL and filter string used depend on which parameters are passed to the object. This method handles the complexity so that it is easier to add new modules and ensures that all modules are consistent in the type of data returned.
-  * In query specific object, the URL is constructed to target a specific object within the module's class using its distinguished name. The filter string is typically not applied, allowing retrieval of the full object data. This approach simplifies module development by handling the URL construction dynamically and ensures consistent data retrieval for individual objects.
-  * In query all objects, the URL is built to query all objects of the specified class. If a target filter is provided, it is applied as a query parameter to restrict the returned data to matching objects. This method manages the complexity of querying collections, making it easier to add new modules and maintain uniformity in the data returned across modules.
-* `https://www.cisco.com/c/en/us/td/docs/dcn/aci/apic/all/apic-rest-api-configuration-guide/cisco-apic-rest-api-configuration-guide-42x-and-later/m_using_the_rest_api.html`_ provides more information about the APIC REST API and how to construct URLs.
-
-    **Note**: The design goal is to take all ID parameters that have values and return the most specific data possible. If no ID parameters are supplied to the task, then all objects of the class will be returned. If the task does consist of ID parameters, then the data for the specific object is returned. If a partial set of ID parameters is passed, then the module will use the IDs that are passed to build the URL and filter strings appropriately.
-
-The ``construct_url()`` method takes 2 required arguments and 7 optional arguments; the first 6 optional arguments are subclasses of the root class, and the last argument is a list of child classes. The method builds the URL and filter string based on the provided arguments, allowing for flexible querying of ACI objects.
-
-    The required arguments of the method ``construct_url()`` are:
-        * **self** - passed automatically with the class instance
-        * **root_class** - A dictionary consisting of ``aci_class``, ``aci_rn``, ``target_filter``, and ``module_object`` keys
-
-        + **aci_class**: The name of the class used by the APIC.
-
-        + **aci_rn**: The relative name of the object.
-
-        + **target_filter**: A dictionary with key-value pairs that make up the query string for selecting a subset of entries.
-
-        + **module_object**: The particular object for this class.
-
-            Some modules, like ``aci_tenant``, are the root class and so would not need to pass any additional arguments to the method.
-
-    The optional arguments of the method ``construct_url()`` are:
-
-        * subclass_1 - A dictionary consisting of ``aci_class``, ``aci_rn``, ``target_filter``, and ``module_object`` keys
-
-        * subclass_2 - A dictionary consisting of ``aci_class``, ``aci_rn``, ``target_filter``, and ``module_object`` keys
-
-        * subclass_3 - A dictionary consisting of ``aci_class``, ``aci_rn``, ``target_filter``, and ``module_object`` keys
-
-        * subclass_4 - A dictionary consisting of ``aci_class``, ``aci_rn``, ``target_filter``, and ``module_object`` keys
-
-        * subclass_5 - A dictionary consisting of ``aci_class``, ``aci_rn``, ``target_filter``, and ``module_object`` keys
-
-        * subclass_6 - A dictionary consisting of ``aci_class``, ``aci_rn``, ``target_filter``, and ``module_object`` keys
-
-        * child_classes - The list of APIC names for the child classes supported by the modules.
-            + This is a list, even if it contains only one item.
-            + These are the child class object names used by the APIC.
-            + These are used to limit the returned child_classes when possible.
-
-**Note**:
-    * The ``aci_rn`` is the relative name of the object, which is one section of the distinguished name (DN) that uniquely identifies the object in the ACI fabric. It should not contain the entire DN, as the method will automatically construct the full DN using the provided RNs of all arguments.
-    * RN is one section of DN, with the ID of the specific argument. Do not put the entire DN in the **aci_rn** of each argument. The method automatically constructs the DN using the RN of all the arguments above.
-    * Refer to the modules aci_l3out_static_routes_nexthop for creation of object (ip:NexthopP) and aci_l3out_hsrp_secondary_vip for creation of object (hsrp:SecVip) for insights on how to use the ``construct_url()`` method.
-
-Example:
-
-.. code-block:: python
-
-  # If "dn" = "uni/tn-ansible_tenant/out-ansible_l3out/lnodep-ansible_node_profile/", then the construct_url() will be constructed as follows:
-
-  aci.construct_url(
-      root_class=dict(
-          aci_class='fvTenant',
-          aci_rn='tn-{0}'.format(tenant),
-          module_object=tenant,
-          target_filter={'name': tenant}
-      ),
-      subclass_1=dict(
-          aci_class='l3extOut',
-          aci_rn='out-{0}'.format(l3out),
-          module_object=l3out,
-          target_filter={'name': l3out}
-      ),
-      subclass_2=dict(
-          aci_class='l3extLNodeP',
-          aci_rn='lnodep-{0}'.format(node_profile),
-          module_object=node_profile,
-          target_filter={'name': node_profile}
-      )target_filter={'name': nexthop}
+    Constructing URLs
+    ^^^^^^^^^^^^^^^^^
+    11. The following section constructs a filter to target a set of entries that match certain criteria at the level of the target DN and in the subtree below it. The construct_url function below is used to build the appropriate DN by using the tenant as the root class and other subsequent subclasses up to object of the module.
+    
+    The ``construct_url()`` method is used to dynamically build the REST API URL and query parameters to retrieve or configure ACI objects at various levels of the object hierarchy, supporting flexible depth and child class filtering for APIC requests.
+    
+    * When the ``state`` is not ``query``, the URL consists of the base URL (to access the APIC) combined with the distinguished name of the object (to access the object). The filter string limits the returned data to configuration information only.
+    * When ``state`` is ``query``, the URL and filter string used depend on which parameters are passed to the object. This method handles the complexity so that it is easier to add new modules and ensures that all modules are consistent in the type of data returned.
+      * In query specific object, the URL is constructed to target a specific object within the module's class using its distinguished name. The filter string is typically not applied, allowing retrieval of the full object data. This approach simplifies module development by handling the URL construction dynamically and ensures consistent data retrieval for individual objects.
+      * In query all objects, the URL is built to query all objects of the specified class. If a target filter is provided, it is applied as a query parameter to restrict the returned data to matching objects. This method manages the complexity of querying collections, making it easier to add new modules and maintain uniformity in the data returned across modules.
+    * `https://www.cisco.com/c/en/us/td/docs/dcn/aci/apic/all/apic-rest-api-configuration-guide/cisco-apic-rest-api-configuration-guide-42x-and-later/m_using_the_rest_api.html`_ provides more information about the APIC REST API and how to construct URLs.
+    
+        **Note**: The design goal is to take all ID parameters that have values and return the most specific data possible. If no ID parameters are supplied to the task, then all objects of the class will be returned. If the task does consist of ID parameters, then the data for the specific object is returned. If a partial set of ID parameters is passed, then the module will use the IDs that are passed to build the URL and filter strings appropriately.
+    
+    The ``construct_url()`` method takes 2 required arguments and 7 optional arguments; the first 6 optional arguments are subclasses of the root class, and the last argument is a list of child classes. The method builds the URL and filter string based on the provided arguments, allowing for flexible querying of ACI objects.
+    
+        The required arguments of the method ``construct_url()`` are:
+            * **self** - passed automatically with the class instance
+            * **root_class** - A dictionary consisting of ``aci_class``, ``aci_rn``, ``target_filter``, and ``module_object`` keys
+    
+            + **aci_class**: The name of the class used by the APIC.
+    
+            + **aci_rn**: The relative name of the object.
+    
+            + **target_filter**: A dictionary with key-value pairs that make up the query string for selecting a subset of entries.
+    
+            + **module_object**: The particular object for this class.
+    
+                Some modules, like ``aci_tenant``, are the root class and so would not need to pass any additional arguments to the method.
+    
+        The optional arguments of the method ``construct_url()`` are:
+    
+            * subclass_1 - A dictionary consisting of ``aci_class``, ``aci_rn``, ``target_filter``, and ``module_object`` keys
+    
+            * subclass_2 - A dictionary consisting of ``aci_class``, ``aci_rn``, ``target_filter``, and ``module_object`` keys
+    
+            * subclass_3 - A dictionary consisting of ``aci_class``, ``aci_rn``, ``target_filter``, and ``module_object`` keys
+    
+            * subclass_4 - A dictionary consisting of ``aci_class``, ``aci_rn``, ``target_filter``, and ``module_object`` keys
+    
+            * subclass_5 - A dictionary consisting of ``aci_class``, ``aci_rn``, ``target_filter``, and ``module_object`` keys
+    
+            * subclass_6 - A dictionary consisting of ``aci_class``, ``aci_rn``, ``target_filter``, and ``module_object`` keys
+    
+            * child_classes - The list of APIC names for the child classes supported by the modules.
+                + This is a list, even if it contains only one item.
+                + These are the child class object names used by the APIC.
+                + These are used to limit the returned child_classes when possible.
+    
+    **Note**:
+        * The ``aci_rn`` is the relative name of the object, which is one section of the distinguished name (DN) that uniquely identifies the object in the ACI fabric. It should not contain the entire DN, as the method will automatically construct the full DN using the provided RNs of all arguments.
+        * RN is one section of DN, with the ID of the specific argument. Do not put the entire DN in the **aci_rn** of each argument. The method automatically constructs the DN using the RN of all the arguments above.
+        * Refer to the modules aci_l3out_static_routes_nexthop for creation of object (ip:NexthopP) and aci_l3out_hsrp_secondary_vip for creation of object (hsrp:SecVip) for insights on how to use the ``construct_url()`` method.
+    
+    Example:
+    
+    .. code-block:: python
+    
+      # If "dn" = "uni/tn-ansible_tenant/out-ansible_l3out/lnodep-ansible_node_profile/", then the construct_url() will be constructed as follows:
+    
+      aci.construct_url(
+          root_class=dict(
+              aci_class='fvTenant',
+              aci_rn='tn-{0}'.format(tenant),
+              module_object=tenant,
+              target_filter={'name': tenant}
+          ),
+          subclass_1=dict(
+              aci_class='l3extOut',
+              aci_rn='out-{0}'.format(l3out),
+              module_object=l3out,
+              target_filter={'name': l3out}
+          ),
+          subclass_2=dict(
+              aci_class='l3extLNodeP',
+              aci_rn='lnodep-{0}'.format(node_profile),
+              module_object=node_profile,
+              target_filter={'name': node_profile}
+          )target_filter={'name': nexthop}
+          )
       )
-  )
-
-**Note**: Any requirements/changes for values of arguments (object,object_prop1, etc.) such as conversion to boolean, letter case, or formatting/validating the inputs must be done before the ``construct_url()`` method is called. This is because the method will use the values as they are passed in the task, and it will not perform any additional validation or conversion.
-
-Getting the existing configuration
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-12. aci.get_existing() should remain as is. It is used to get the existing configuration of the object.
-
-Once the URL and filter string have been built, the module is ready to retrieve the existing configuration for the object:
-
-* ``state: present`` retrieves the configuration to use as a comparison against what was entered in the task. All values that are different from the existing values will be updated.
-* ``state: absent`` uses the existing configuration to see if the item exists and needs to be deleted.
-* ``state: query`` uses this to perform the query for the task and report back the existing data.
-
-.. code-block:: python
-
-    aci.get_existing()
-
-When state is present
-^^^^^^^^^^^^^^^^^^^^^
-When ``state: present``, the module needs to perform a diff against the existing configuration and the task entries. If any value needs to be updated, the module will make a POST request with only the items that need to be updated. In other words, the payload is built with the expected configuration and this is compared with the existing configuration that was retrieved. If a change is needed, then the changed configuration will be pushed to APIC. Some modules have children that are in a 1-to-1 relationship with another object; for these cases, the module can be used to manage the child objects.
+    
+    **Note**: Any requirements/changes for values of arguments (object,object_prop1, etc.) such as conversion to boolean, letter case, or formatting/validating the inputs must be done before the ``construct_url()`` method is called. This is because the method will use the values as they are passed in the task, and it will not perform any additional validation or conversion.
+    
+    Getting the existing configuration
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    12. aci.get_existing() should remain as is. It is used to get the existing configuration of the object.
+    
+    Once the URL and filter string have been built, the module is ready to retrieve the existing configuration for the object:
+    
+    * ``state: present`` retrieves the configuration to use as a comparison against what was entered in the task. All values that are different from the existing values will be updated.
+    * ``state: absent`` uses the existing configuration to see if the item exists and needs to be deleted.
+    * ``state: query`` uses this to perform the query for the task and report back the existing data.
+    
+    .. code-block:: python
+    
+        aci.get_existing()
+    
+    When state is present
+    ^^^^^^^^^^^^^^^^^^^^^
+    When ``state: present``, the module needs to perform a diff against the existing configuration and the task entries. If any value needs to be updated, the module will make a POST request with only the items that need to be updated. In other words, the payload is built with the expected configuration and this is compared with the existing configuration that was retrieved. If a change is needed, then the changed configuration will be pushed to APIC. Some modules have children that are in a 1-to-1 relationship with another object; for these cases, the module can be used to manage the child objects.
 
 Building the ACI payload
 """"""""""""""""""""""""
