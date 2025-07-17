@@ -86,7 +86,7 @@ The purpose of this section is to illustrate how to build a module based on an e
   }
 
 Documentation Section
----------------------
+~~~~~~~~
 
 3. In the documentation section, begin by changing the name of the module, its short description, and the description of the functions being performed on the object. The description of the module must be followed by the options, which is a list of attributes. Each attribute should include the name, description, data type, aliases (if applicable), choices (if applicable), and default (if applicable) of all the parameters that will be consumed by the object.
  * The options section includes all the parameters that will be defined in the argument_spec, such as the object_id, configurable properties of the object, parent object_id, state, etc., and these need to be documented in the same file as the module in the DOCUMENTATION section.
