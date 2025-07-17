@@ -3,208 +3,282 @@
 ****************************
 Developing Cisco ACI modules
 ****************************
-This is a developer guide for contributing modules to the Cisco ACI-Ansible collection. It is for developers who want to contribute code, fixes, or new modules to the collection. It will walk you through different steps and the expected conventions for contributions.
+This is a developer guide for contributing modules to the Cisco ACI-Ansible collection. It is for developers who wish to contribute code, fixes, or new modules to the collection. This document will outline various steps and the expected conventions for contributions.
 
-For more information about Cisco ACI, look at the :ref:`Cisco ACI user guide <aci_guide>`.
+For more information about Cisco ACI, consult the `Cisco ACI user guide <https://www.cisco.com/c/en/us/solutions/collateral/data-center-virtualization/application-centric-infrastructure/solution-overview-c22-741487.html>`_.
 
-What's covered in this section:
+What is covered in this section:
 
 .. contents::
-   :depth: 3
-   :local:
+  :depth: 3
+  :local:
 
 .. _aci_dev_guide_intro:
 
 Introduction
 ============
-The `cisco.aci collection <https://galaxy.ansible.com/cisco/aci>`_ already includes a large number of Cisco ACI modules; however, the ACI object model is huge, and covering all possible functionality would easily require more than 1,500 individual modules. Therefore, Cisco develops modules requested by people on a just-in-time basis.
+The `cisco.aci collection <https://galaxy.ansible.com/cisco/aci>`_ already includes a large number of Cisco ACI modules; however, the ACI object model is extensive, and covering all possible functionality would easily require more than 1,500 individual modules. Therefore, Cisco develops modules requested on a just-in-time basis.
 
-If you need a specific functionality, you have 3 options:
+If a specific functionality is required, there are three options:
 
-- Open an issue using https://github.com/CiscoDevNet/ansible-aci/issues/new/choose so that Cisco developers can build, enhance, or fix the modules for you.
-- Learn the ACI object model and use the low-level APIC REST API using the :ref:`aci_rest <aci_rest_module>` module.
-- Contribute to Cisco's ansible-aci project by writing your own dedicated modules, proposing a fix or an enhancement, and being part of the Cisco ansible-aci community.
+- Open an issue using https://github.com/CiscoDevNet/ansible-aci/issues/new/choose so that Cisco developers can build, enhance, or fix the modules.
+- Learn the ACI object model and utilize the low-level APIC REST API using the `aci_rest <https://docs.ansible.com/ansible/latest/collections/cisco/aci/aci_rest_module.html>`_ module.
+- Contribute to Cisco's ansible-aci project by writing dedicated modules, proposing a fix or an enhancement, and becoming part of the Cisco ansible-aci community.
 
 .. _aci_dev_guide_git:
 
-In this guide, we're going to concentrate on the third option to show you how to build your own module, fix an issue, or improve an existing module and contribute it back to the ansible-aci project. The first step in the process is to retrieve the latest version of the ansible-aci collection code.
-By retrieving the latest version, you will be able to modify existing code.
+This guide will concentrate on the third option to demonstrate how to build a module, fix an issue, or improve an existing module and contribute it back to the ansible-aci project. The initial step in this process is to retrieve the latest version of the ansible-aci collection code. By retrieving the latest version, one will be able to modify existing code.
+
+Development Environment
+======================
+The collection code is located in a git repository (https://github.com/CiscoDevNet/ansible-aci). 
 
 Fork, Clone and Branch
-======================
-The collection code is located in a git repository (https://github.com/CiscoDevNet/ansible-aci). You can directly clone this repository to retrieve the latest version of the code, but in order to later contribute your code back to the project, you will need to create a fork to be able to create a proper pull request.
+-----------------------
+One can directly clone this repository to retrieve the latest version of the code, but to later contribute code back to the project, it will be necessary to create a fork to enable a proper pull request.
 
-**Fork**
-   A fork is a copy of a repository that allows you to make changes to the repository without affecting the original project.
-You can contribute your changes back to the original project by using Pull Requests from the forked repository.
+It is recommended to fork the repository first, then clone the forked copy to the local machine and create a branch to push the changes while keeping the master branch clean. For further information, refer to the `Fork, Clone and Branch <fork_clone_branch_collection>`_ section.
 
-  Let's create a fork of the repository.
+Tools required for installation and build
+------------------------------------------------
 
-* Go to: https://github.com/CiscoDevNet/ansible-aci
-* Fork CiscoDevNet's **ansible-aci** repo by clicking the top right-hand corner fork button.
-
-.. seealso::
-
-  `_How to fork a repo: <https://docs.github.com/en/github/getting-started-with-github/fork-a-repo>`_
-
-Now that we have forked our repository, let's clone the forked repository on our local machine.
-
-**Clone**  
-   Clone allows you to copy a repository to your local machine.
-
-* Clone the forked repo by going to the terminal and enter the following command: 
-.. code-block:: Blocks
-
-   git clone https://github.com/<Forked Organization>/ansible-aci.git
-
-**Naming Convention**
-   "origin" is the default name for the first Git remote of a cloned repository. In this case, it represents your forked repo where you are going to make changes, commit, and push your code to GitHub.
-
-* Verify the name of the Git remote of your forked repository by going to the terminal and enter the following command: 
-.. code-block:: Blocks
-
-   git remote -v
-
-You should see in the output your repository listed after the name origin.
-.. code-block:: Blocks
-
-origin        https://github.com/<Forked Organization>/ansible-aci.git (fetch)
-origin        https://github.com/<Forked Organization>/ansible-aci.git (push)
-
-To be able to retrieve the latest changes made to the upstream project repo (CiscoDevNet/ansible-aci), we need to add it as a second Git remote. We recommend calling this second remote "upstream" and we will keep referring to it as upstream in the rest of the document.
-
-* Add the upstream repo as a new Git remote:
-.. code-block:: Blocks
-
-   git remote add upstream https://github.com/CiscoDevNet/ansible-aci.git
-
-Adding the main repository "upstream" is a one-time operation.
-Now that we have added the upstream repo as a remote, we can make sure that our local master branch is up-to-date with the upstream repository.
-
-* Update the local master branch from the upstream repository:
-.. code-block:: Blocks
-
-   git checkout master
-   git pull upstream master
-
-Now that our local master branch is up-to-date with the upstream repo, we can create a feature branch.
-
-**Branch**
-   Creating branches makes it easier to fix bugs, add new features, and integrate new versions after they have been tested in isolation. Master is the default branch of the local repository. Each time you need to make changes to a module or create a new module, we recommend that you create a new dedicated branch from master.
-
-* Create a branch from master by using the following commands on the terminal:
-.. code-block:: Blocks
-
-   git checkout master
-   git checkout -b <new-branch-name>
-   git branch
-
-You now have a clean branch of the latest master, where you can make all of your changes. By keeping your changes in a dedicated branch, you can keep the master branch clean and on track with the upstream master. This makes it easier to keep the local master branch updated without needing to merge code or rebase the master branch. As a best practice, we recommend that you do not commit changes to your local master branch but commit them to a dedicated feature branch.
-
-Now that we have forked the repo, cloned it, and created a feature branch, let us look at how the repository and modules are structured.
+Refer the documentation in the `README.md <https://github.com/CiscoDevNet/ansible-aci?tab=readme-ov-file#ansible-aci>`_ file of the collection repository.
 
 .. _aci_dev_guide_module_structure:
 
 ACI module structure
 ====================
 
-Structure of the cisco.aci collection
--------------------------------------
+    **Note**: Copy the module outline from aci_module_name.py in the docs/docsite/rst/sample_module directory and use it as a template for a new module. This will ensure that the module follows the same structure and conventions as the existing modules in the collection.
+    If the python file is copied, ensure to rename the file_name to match the name of the module (aci_module_name.py => aci_l3out_static_routes.py).
 
-The **ansible-aci** repository consists of directories and files as listed below:
+The structure of the cisco.aci collection contains an ansible-aci repository which consists of directories and files. The repository in detail is explained in the `cisco_aci_collection_structure <cisco_aci_collection_structure>`_ section.
 
-.. code-block:: Blocks
+Building a module
+------------------
+Having explained and reviewed the components of the ACI module structure, this guide will now proceed to build a module. The following section demonstrates a basic and practical approach to building a module with the help of an existing module. This approach simplifies the creation of a new module without requiring everything to be written from scratch.
 
-      ansible-aci/
-      ├─ plugins/
-      │  ├─ modules/
-      │  │  ├─ aci_l2out.py
-      │  │  ├─ ...
-      │  ├─ module_utils/
-      │  │  ├─ aci.py
-      │  ├─ doc_fragments/
-      │  │  ├─ aci.py
-      │  ├─ httpapi/
-      │  │  ├─ aci.py
-      ├─ tests/
-      │  ├─ integration/
-      │  │  ├─ inventory.networking
-      │  │  ├─ targets/
-      │  │  │  ├─ aci_l2out/
-      │  │  │  │  ├─ tasks/
-      │  │  │  │  │  ├─ main.yml
-      │  │  │  ├─ .../
-      │  ├─ sanity/
-      │  │  ├─ requirements.txt
-      │  ├─ unit/
-      │  │  ├─ ...
-      │  │  ├─ .../
-      ├─ changelogs/
-      │  ├─ changelog.yml
-      │  ├─ config.yml
-      ├─ meta/
-      │  ├─ runtime.yml
-      ├─ license
-      ├─ galaxy.yml
-      ├─ README
-      ├─ requirements.txt
+The purpose of this section is to illustrate how to build a module based on an existing module. This is achieved by using the template provided in aci_module_name.py in the docs/docsite/rst/sample_module. A module similar to the one intended for creation should be selected to reuse the required sections. For this, one can either take the parent object and append the attributes required for the module.
 
-Let's briefly go through each file and its context.
+1. In the modules directory located in the plugins directory of the collection, create a new file in .py format or use the template provided in aci_module_name.py in the docs/docsite/rst/sample_module directory. To create a name for the new module, always use the format aci_<name_of_module>.
 
-**plugins**
-   Consists of Python code that defines different functions and capabilities of the collection.
+    The first 15 lines of the new module should include the same import statements and metadata as any other module. The only change here is in the copyright section.
 
-   The **modules** directory in plugins consists of Cisco ACI modules, and each module covers the functionality of an object in ACI. Any new module developed to manage an ACI object goes in this directory.
+**Note**: For reference, select any module from the collection that is at the same level as the new module or the parent module.
 
-   The **module_utils** directory has the aci.py file, which serves as a library for the modules. Most modules in the collection borrow functions from this library. These functions help a module to access APIC, make requests to modify the configuration of an object in ACI, etc. This is where one would add any function to use across multiple modules.
+2. Change the copyright section by replacing <year> by current year, <name> by author's name and <author_github_handle> by author's github handle:
 
-   The **doc_fragments** directory has the aci.py file, which serves as a plugin and is used in each module's documentation. Every module has its own documentation section, but all the modules also share some common documentation elements, such as authentication details, notes: or seealso: entries. To avoid duplication of that information in each module's documentation block, it can be saved once in doc_fragments and used by all modules.
+.. code-block:: python
 
-**tests** 
-   This is where the different tests are defined. We run all sanity, unit, and integration tests on every code submission to the repository.
+  #!/usr/bin/python
+  # -*- coding: utf-8 -*-
 
-   The **integration** directory in **tests** consists of the **targets** directory, which has test directories for most of the modules present in our collection. Each module has its own test directory, and each directory is similar to an ansible role and contains a tasks directory, which contains a main.yml file. The main.yml file consists of tasks covering every functionality that a module provides. If the main.yml becomes too big, it can be split into multiple .yml files, and each of those can be imported into the main.yml file. Integration tests are run on every code submission to the repository. Every new module submission, bug fix or enhancement requires a test file or a change to an existing test file. This ensures that the code in our module is usable and robust.
+  # Copyright: (c) <year>, <Name> (<author_github_handle>)
+  # GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-   The **integration** directory also consists of the **inventory.networking** file, which defines the hosts, groups of hosts, and variables used by the integration tests role defined in the integration's targets directory.
+  from __future__ import absolute_import, division, print_function
+  __metaclass__ = type
 
-**changelogs**
-   This directory consists of a record of all the changes made to the project.
+  ANSIBLE_METADATA = {
+      'metadata_version': '1.1',
+      'status': ['preview'],
+      'supported_by': 'community'
+  }
 
-   The **changelog.yml** file contains a chronologically ordered list of collection versions and the changes included in those versions. This file is used to generate the changelog.rst file. The changes are categorized into major changes, minor changes and bugfixes.
+Documentation Section
+---------------------
 
-   The **config.yml** file contains configuration options used by the ansible-changelog tool to generate the **changelog.rst** file.
+3. In the documentation section, begin by changing the name of the module, its short description, and the description of the functions being performed on the object. The description of the module must be followed by the options, which is a list of attributes. Each attribute should include the name, description, data type, aliases (if applicable), choices (if applicable), and default (if applicable) of all the parameters that will be consumed by the object.
+ * The options section includes all the parameters that will be defined in the argument_spec, such as the object_id, configurable properties of the object, parent object_id, state, etc., and these need to be documented in the same file as the module in the DOCUMENTATION section.
+    + Description must be clear and concise, providing enough detail for users to understand the purpose and usage of the object.
+    + Description must include specific details about the object, such as its purpose, how it is used, and any important considerations.
+    + For example,
+        + The APIC defaults to C(default_value) when unset during creation. Explains that when an object value is not explicitly provided in a task, the APIC automatically assigns a default value to that object.
+        + The object_prop1 must be a valid choice from the list: [choice1, choice2, choice3]. This explains that the values for object_prop1 must be one of the specified choices.
+        + The object_prop1 must be in the range 1 to 100. The default value is 50.
+        + The object_prop3 is only applicable when using 'object_prop2' is set to <specific_value>.
+        + default: <xyz> , the default values should not be provided for configuration arguments, unless API adds a default_value to the payload when creating the object. Default values could cause unintended changes to the object.
+        + required: true; should be used only for parameters that are mandatory in all the states (present,query,absent) of the module. This ensures that users must provide a value for these parameters when using the module.
 
-**galaxy.yml** 
-   The **galaxy.yml** file is placed in the root directory of the collection. This file contains the metadata of the collection that is used to generate an ansible-aci collection object. It is also used for information in Ansible Galaxy.
+    **Note**: If a parameter is required in some states but not in others, then it should **not** be marked as required: true. Instead, it should be added in the argument_spec with the appropriate required_if conditions.
 
-Now that we understand the directory structure, let's look at how we use those files in those directories to build an ACI module.
+ * The options section must be followed by the extends_documentation_fragment section, which is used to include the common reusable documentation fragments for all ACI modules.
+    + **plugins/doc_fragments** directory of the collection contain the common documentation fragments; these are mentioned in the extends_documentation_fragment section.
+    + This includes the cisco.aci.aci fragment, which contains the common parameters used in all ACI modules.
+        + cisco.aci.annotation is added to the extends_documentation_fragment section if the module supports the annotation parameter.
+        + cisco.aci.owner is added to the extends_documentation_fragment section if the module supports the owner parameter.
+
+The format of documentation is shown below:
+
+.. code-block:: yaml
+
+  DOCUMENTATION = r"""
+  ---
+  module: aci_<name_of_module>
+  short_description: Short description of the module being created (config:<name_of_class>).
+  description:
+  - Functionality one.
+  - Functionality two.
+  options:
+    object_id:
+      description:
+      - Description of the object.
+      type: Data type of object eg. 'str'
+      aliases: [ Alternate name of the object ]
+    object_prop1:
+      description:
+      - Description of property one.
+      type: Property's data type eg. 'int'
+      choices: [ choice one, choice two ]
+    object_prop2:
+      description:
+      - Description of property two.
+      - This attribute is only configurable in ACI versions 6.0(2h) and above.
+      type: Property's data type eg. 'bool'
+    object_prop3:
+      description:
+      - Description of property three.
+      - The APIC defaults to C(default_value) when unset during creation.
+      - The object_prop3 is only applicable when using 'object_prop2' is set to <specific_value>.
+      - The object_prop3 must be in the range 1 to 100. The default value is 50.
+      type: Property's data type eg. 'str'
+      required: true
+    state:
+      description:
+      - Use C(present) or C(absent) for adding or removing.
+      - Use C(query) for listing an object or multiple objects.
+      type: str
+      choices: [ absent, present, query ]
+      default: present
+  extends_documentation_fragment:
+  - cisco.aci.aci
+
+4. The options are followed by notes, which usually contain any dependencies of the module being created with the parent modules that exist in the collection. A "see also" section is also included, which provides a link to the class being used in the module, followed by the author's name and GitHub ID as shown below.
+
+.. code-block:: yaml
+
+      notes:
+      - The C(root_object), C(parent_object), C(object_prop), used must exist before using this module in your playbook.
+        The M(cisco.aci.aci_root_object_module) and M(cisco.aci.parent_object_module) modules can be used for this.
+      seealso:
+      - module: cisco.aci.aci_root_object_module
+      - module: cisco.aci.aci_parent_object_module
+      - name: APIC Management Information Model reference
+        description: More information about the internal APIC class B(config:<name_of_class>).
+        link: https://developer.cisco.com/docs/apic-mim-ref/
+      author:
+      - <author's name> (<author's github id>)
+      """
+
+Examples Section
+----------------
+
+5. The examples section of the copied module should be modified by adding the necessary parameters to all the examples. Please note that removing and querying an object will only contain the object name and no object parameters. "Query All" will not have any parameters other than the one that are set to required, ensuring that all the objects of the class being worked upon are returned.
+
+  - The examples section must consist of Ansible tasks which can be used as a reference to build playbooks.
+  - The example section must include CRUD operations that can be performed using the module. It should include examples for adding, updating, querying, and removing an object. Each example should include the required parameters and the expected state of the object.
+The format of this section is shown below:
+
+.. code-block:: yaml
+
+  EXAMPLES = r"""
+  - name: Add a new object
+    cisco.aci.aci_<name_of_module>:
+      host: apic
+      username: admin
+      password: SomeSecretePassword
+      object_id: id
+      object_prop1: prop1
+      object_prop2: prop2
+      state: present
+    delegate_to: localhost
+
+  - name: Query an object
+    cisco.aci.aci_<name_of_module>:
+      host: apic
+      username: admin
+      password: SomeSecretePassword
+      object_id: id
+      state: query
+    delegate_to: localhost
+
+  - name: Query all objects
+    cisco.aci.aci_<name_of_module>:
+      host: apic
+      username: admin
+      password: SomeSecretePassword
+      state: query
+    delegate_to: localhost
+
+  - name: Remove an object
+    cisco.aci.aci_<name_of_module>:
+      host: apic
+      username: admin
+      password: SomeSecretePassword
+      object_id: id
+      state: absent
+    delegate_to: localhost
+  """
+
+.. note:: Ensure to test the examples since users generally copy and paste examples to use the module.
+
+Return Section
+----------------
+The RETURN section is used in every module and has the same content, so copy and paste it from any module and do not modify it
+
+.. code-block:: python
+
+  RETURN = r"""
+current:
+  ...
+"""
 
 Importing objects from Python libraries
 ---------------------------------------
+
+7. The following import section is generally left untouched, but if a shared method is added in the library, it might need to be imported here.
+
 The following imports are standard across ACI modules:
 
 .. code-block:: python
 
-    from ansible.module_utils.aci.plugins.module_utils.aci import ACIModule, aci_argument_spec
     from ansible.module_utils.basic import AnsibleModule
+    from ansible.module_utils.aci.plugins.module_utils.aci import ACIModule, aci_argument_spec
 
-**ansible.module_utils.aci** is used to import the superclass ACIModule and the aci_argument_spec definition from the library aci.py in the module_utils directory we mentioned earlier. ACIModule is imported because it has basic functions to make API requests and other capabilities that allow our modules to manipulate objects. The aci.py library also contains a generic argument definition called **aci_argument_spec**. It is used by all the modules and allows them to accept shared parameters such as username and password.
+
+**ansible.module_utils.aci** is used to import the superclass ACIModule and the aci_argument_spec definition from the library aci.py in the module_utils directory mentioned earlier. ACIModule is imported because it has basic functions to make API requests and other capabilities that allow modules to manipulate objects. The aci.py library also contains a generic argument definition called **aci_argument_spec**. It is used by all the modules and allows them to accept shared parameters such as username and password.
+  - **aci_annotation_spec** and **aci_owner_spec** are also imported for modules supporting annotation and owner parameters, respectively. Add this only if used by the module.
 
 Similarly, the AnsibleModule is imported, which contains common code for quickly building an Ansible module in Python.
 
+To understand more about the AnsibleModule, refer to the `Ansible documentation <https://docs.ansible.com/ansible/latest/dev_guide/developing_program_flow_modules.html#ansiblemodule>`_.
+
+.. code-block:: python
+
+  # Importing constants for ACI modules when needed.
+  # This import is used to access predefined constants and mappings for ACI objects.
+  from ansible_collections.cisco.aci.plugins.module_utils.constants import *
+
+- the '*' can be replaced with the specific constants needed, such as:
+  from ansible_collections.cisco.aci.plugins.module_utils.constants import FILTER_PORT_MAPPING, IPV4_REGEX
+
+The imported constants from plugins/module_utils/constants.py file define the collection of fixed values and mapping dictionaries used to standardize and normalize for ACI-specific parameters.
+
 Defining the argument_spec variable
 -----------------------------------
+8. In the main function, the argument_spec variable defines all the arguments necessary for this module and is based on aci_argument_spec. All arguments defined previously in the documentation section are added to this variable.
+
 The **argument_spec** variable is based on **aci_argument_spec** and allows a module to accept additional parameters from the user specific to the module.
-The first line in the block adds the standard connection parameters to the module. After that, the next section will update the ``argument_spec`` dictionary with module-specific parameters. The module-specific parameters should include:
+
+To understand what argument_spec is and how it is used, refer to the `Ansible documentation <https://docs.ansible.com/ansible/latest/dev_guide/developing_program_flow_modules.html#argument-spec>`_.
 
 * the object_id (usually the name)
 * the configurable properties of the object
 * the object_id of each parent up to the root (usually the name)
-* The child classes that have a 1-to-1 relationship with the main object don't need their own dedicated module and can be incorporated into the parent module. If the relationship is 1-to-many/many-to-many, this child class will need a dedicated module.
+* The child classes that have a 1-to-1 relationship with the main object do not need their own dedicated module and can be incorporated into the parent module. If the relationship is 1-to-many/many-to-many, this child class will require a dedicated module. In some corner cases, deviations from this pattern might occur.
 * the state
-
   + ``state: absent`` to ensure the object does not exist
-  + ``state: present`` to ensure the object and configs exist; this is also the default
+  + ``state: present`` to ensure the object and configurations exist; this is also the default
   + ``state: query`` to retrieve information about a specific object or all objects of the class
 
 .. code-block:: python
@@ -222,11 +296,11 @@ The first line in the block adds the standard connection parameters to the modul
             state=dict(type='str', default='present', choices=['absent', 'present', 'query']),
         )
 
-.. note::  It is recommended not to provide default values for configuration arguments. Default values could cause unintended changes to the object.
+**Note**: It is recommended not to provide default values for configuration arguments. Default values could cause unintended changes to the object.
 
 Using the AnsibleModule object
 ------------------------------
-The following section creates an instance of AnsibleModule and then adds to the constructor a series of properties such as the argument_spec. The module should support check-mode, which validates the working of a module without making any changes to the ACI object. The first attribute we pass to the constructor is ``argument_spec``; the second argument is ``supports_check_mode``. It is highly recommended that every module support check mode in this collection. The last element is required_if, which is used to specify conditional required attributes, and since these modules support querying the APIC for all objects of the module's class, the object/parent IDs should only be required if ``state: absent`` or ``state: present``.
+The following section creates an instance of AnsibleModule and then adds to the constructor a series of properties such as the argument_spec. The module should support check-mode, which validates the working of a module without making any changes to the ACI object. The first attribute passed to the constructor is ``argument_spec``; the second argument is ``supports_check_mode``. It is highly recommended that every module support check mode in this collection. The last element is required_if, which is used to specify conditional required attributes, and since these modules support querying the APIC for all objects of the module's class, the object/parent IDs should only be required if ``state: absent`` or ``state: present``.
 
 .. code-block:: python
 
@@ -239,23 +313,29 @@ The following section creates an instance of AnsibleModule and then adds to the 
         ],
     )
 
+9. The required_if variable has the following arguments. These arguments are not set for all states because "Query All" does not require them. However, users are still required to provide these arguments when creating or deleting something. This is why they are included in required_if, which specifies which attributes are required when state is present or absent. If any of the attributes in required_if are missing in the task that adds or deletes the object in the playbook, Ansible will immediately warn the user that the attributes are missing.
+
 Mapping variable definition
 ---------------------------
-Once the AnsibleModule object has been instantiated as module, the necessary parameter values should be extracted from the ``module.params`` dictionary and all additional data should be validated. Usually, the only parameters that need to be extracted are those related to the ACI object configuration and its child configuration. If you have integer objects that you would like to validate, then the validation should be done here.
+10. The above instantiation (required for all modules) is followed by code that is used to get attributes from the playbook that correspond to all the properties of objects defined in the main() function above. This is also where validations and string concatenations are performed.
+
+Once the AnsibleModule object has been instantiated as module, the necessary parameter values should be extracted from the ``module.params`` dictionary and all additional data should be validated. Usually, the only parameters that need to be extracted are those related to the ACI object configuration and its child configuration. If integer objects require validation, then the validation should be performed here.
 
 .. code-block:: python
 
-    object_id = object_id
-    object_prop1 = module.params['object_prop1']
-    object_prop2 = module.params['object_prop2']
-    object_prop3 = module.params['object_prop3']
+    object_id = module.params.get('object_id')
+    object_prop1 = module.params.get('object_prop1')
+    object_prop2 = module.params.get('object_prop2')
+    object_prop3 = module.params.get('object_prop3')
     if object_prop3 is not None and object_prop3 not in range(x, y):
         module.fail_json(msg='Valid object_prop3 values are between x and (y-1)')
-    child_object_id = module.params['child_object_id']
-    child_object_prop = module.params['child_object_prop']
-    state = module.params['state']
+    child_object_id = module.params.get('child_object_id')
+    child_object_prop = module.params.get('child_object_prop')
+    state = module.params.get("state")
 
-.. note:: Sometimes the APIC will require special characters ([, ], and -) or will use object metadata in the name ("vlanns" for VLAN pools); the module should handle adding special characters or joining multiple parameters in order to keep expected inputs simple.
+**Note**:
+  * Sometimes the APIC will require special characters ([, ], and -) or will use object metadata in the name ("vlanns" for VLAN pools); the module should handle adding special characters or joining multiple parameters in order to keep expected inputs simple.
+  * Most type conversions, checks and validations that are done at this level are minimal and are usually done to ensure the the correct formatted data is passed further down the code.
 
 Using the ACIModule object
 --------------------------
@@ -265,7 +345,7 @@ The ACIModule class handles most of the logic for the ACI modules. The ACIModule
 
     aci = ACIModule(module)
 
-The ACIModule has 6 main methods that are used by most modules in the collection:
+The ACIModule has 7 main methods that are used by most modules in the collection:
 
 * construct_url
 * get_existing
@@ -273,123 +353,98 @@ The ACIModule has 6 main methods that are used by most modules in the collection
 * get_diff
 * post_config
 * delete_config
+* exit_json
 
 The first 2 methods are used regardless of what value is passed to the ``state`` parameter.
 
-
 Constructing URLs
 ^^^^^^^^^^^^^^^^^
-The ``construct_url()`` method is used to dynamically build the appropriate URL to interact with the object, as well as the appropriate filter string that should be appended to the URL to filter the results.
+11. The following section constructs a filter to target a set of entries that match certain criteria at the level of the target DN and in the subtree below it. The construct_url function below is used to build the appropriate DN by using the tenant as the root class and other subsequent subclasses up to object of the module.
 
-* When the ``state`` is not ``query``, the URL is the base URL to access the APIC plus the distinguished name to access the object. The filter string will restrict the returned data to just the configuration data.
+The ``construct_url()`` method is used to dynamically build the REST API URL and query parameters to retrieve or configure ACI objects at various levels of the object hierarchy, supporting flexible depth and child class filtering for APIC requests.
+
+* When the ``state`` is not ``query``, the URL consists of the base URL (to access the APIC) combined with the distinguished name of the object (to access the object). The filter string limits the returned data to configuration information only.
 * When ``state`` is ``query``, the URL and filter string used depend on which parameters are passed to the object. This method handles the complexity so that it is easier to add new modules and ensures that all modules are consistent in the type of data returned.
+  * In query specific object, the URL is constructed to target a specific object within the module's class using its distinguished name. The filter string is typically not applied, allowing retrieval of the full object data. This approach simplifies module development by handling the URL construction dynamically and ensures consistent data retrieval for individual objects.
+  * In query all objects, the URL is built to query all objects of the specified class. If a target filter is provided, it is applied as a query parameter to restrict the returned data to matching objects. This method manages the complexity of querying collections, making it easier to add new modules and maintain uniformity in the data returned across modules.
+* `https://www.cisco.com/c/en/us/td/docs/dcn/aci/apic/all/apic-rest-api-configuration-guide/cisco-apic-rest-api-configuration-guide-42x-and-later/m_using_the_rest_api.html`_ provides more information about the APIC REST API and how to construct URLs.
 
-.. note:: Our design goal is to take all ID parameters that have values and return the most specific data possible. If you do not supply any ID parameters to the task, then all objects of the class will be returned. If your task does consist of ID parameters, then the data for the specific object is returned. If a partial set of ID parameters is passed, then the module will use the IDs that are passed to build the URL and filter strings appropriately.
+    **Note**: The design goal is to take all ID parameters that have values and return the most specific data possible. If no ID parameters are supplied to the task, then all objects of the class will be returned. If the task does consist of ID parameters, then the data for the specific object is returned. If a partial set of ID parameters is passed, then the module will use the IDs that are passed to build the URL and filter strings appropriately.
 
-The ``construct_url()`` method takes 2 required arguments:
+The ``construct_url()`` method takes 2 required arguments and 7 optional arguments; the first 6 optional arguments are subclasses of the root class, and the last argument is a list of child classes. The method builds the URL and filter string based on the provided arguments, allowing for flexible querying of ACI objects.
 
-* **self** - passed automatically with the class instance
-* **root_class** - A dictionary consisting of ``aci_class``, ``aci_rn``, ``target_filter``, and ``module_object`` keys
+    The required arguments of the method ``construct_url()`` are:
+        * **self** - passed automatically with the class instance
+        * **root_class** - A dictionary consisting of ``aci_class``, ``aci_rn``, ``target_filter``, and ``module_object`` keys
 
-  + **aci_class**: The name of the class used by the APIC, for example ``fvTenant``
+        + **aci_class**: The name of the class used by the APIC.
 
-  + **aci_rn**: The relative name of the object, for example ``tn-ACME``
+        + **aci_rn**: The relative name of the object.
 
-  + **target_filter**: A dictionary with key-value pairs that make up the query string for selecting a subset of entries, for example ``{'name': 'ACME'}``
+        + **target_filter**: A dictionary with key-value pairs that make up the query string for selecting a subset of entries.
 
-  + **module_object**: The particular object for this class, for example ``ACME``
+        + **module_object**: The particular object for this class.
 
-Example:
+            Some modules, like ``aci_tenant``, are the root class and so would not need to pass any additional arguments to the method.
 
-.. code-block:: python
+    The optional arguments of the method ``construct_url()`` are:
 
-    aci.construct_url(
-        root_class=dict(
-            aci_class='fvTenant',
-            aci_rn='tn-{0}'.format(tenant),
-            target_filter={'name': tenant},
-            module_object=tenant,
-        ),
-    )
+        * subclass_1 - A dictionary consisting of ``aci_class``, ``aci_rn``, ``target_filter``, and ``module_object`` keys
 
-Some modules, like ``aci_tenant``, are the root class and so would not need to pass any additional arguments to the method.
+        * subclass_2 - A dictionary consisting of ``aci_class``, ``aci_rn``, ``target_filter``, and ``module_object`` keys
 
-The ``construct_url()`` method takes 6 optional arguments; the first 5 imitate the root class as described above and the rest are for child objects:
+        * subclass_3 - A dictionary consisting of ``aci_class``, ``aci_rn``, ``target_filter``, and ``module_object`` keys
 
-* subclass_1 - A dictionary consisting of ``aci_class``, ``aci_rn``, ``target_filter``, and ``module_object`` keys
+        * subclass_4 - A dictionary consisting of ``aci_class``, ``aci_rn``, ``target_filter``, and ``module_object`` keys
 
-  + Example: Application Profile Class (AP)
+        * subclass_5 - A dictionary consisting of ``aci_class``, ``aci_rn``, ``target_filter``, and ``module_object`` keys
 
-* subclass_2 - A dictionary consisting of ``aci_class``, ``aci_rn``, ``target_filter``, and ``module_object`` keys
+        * subclass_6 - A dictionary consisting of ``aci_class``, ``aci_rn``, ``target_filter``, and ``module_object`` keys
 
-  + Example: End Point Group (EPG)
+        * child_classes - The list of APIC names for the child classes supported by the modules.
+            + This is a list, even if it contains only one item.
+            + These are the child class object names used by the APIC.
+            + These are used to limit the returned child_classes when possible.
 
-* subclass_3 - A dictionary consisting of ``aci_class``, ``aci_rn``, ``target_filter``, and ``module_object`` keys
-
-  + Example: Binding a Contract to an EPG
-
-* subclass_4 - A dictionary consisting of ``aci_class``, ``aci_rn``, ``target_filter``, and ``module_object`` keys
-
-  + Example: Managing External Subnet objects (l3ext:ipRouteP)
-
-* subclass_5 - A dictionary consisting of ``aci_class``, ``aci_rn``, ``target_filter``, and ``module_object`` keys
-
-  + Example: Managing nexthops for static routes.
-
-* child_classes - The list of APIC names for the child classes supported by the modules.
-
-  + This is a list, even if it contains only one item
-  + These are the unfriendly names used by the APIC
-  + These are used to limit the returned child_classes when possible
-  + Example: ``child_classes=['fvRsBDSubnetToProfile', 'fvRsNdPfxPol']``
+**Note**:
+    * The ``aci_rn`` is the relative name of the object, which is one section of the distinguished name (DN) that uniquely identifies the object in the ACI fabric. It should not contain the entire DN, as the method will automatically construct the full DN using the provided RNs of all arguments.
+    * RN is one section of DN, with the ID of the specific argument. Do not put the entire DN in the **aci_rn** of each argument. The method automatically constructs the DN using the RN of all the arguments above.
+    * Refer to the modules aci_l3out_static_routes_nexthop for creation of object (ip:NexthopP) and aci_l3out_hsrp_secondary_vip for creation of object (hsrp:SecVip) for insights on how to use the ``construct_url()`` method.
 
 Example:
 
 .. code-block:: python
 
-   aci.construct_url(
-           root_class=dict(
-               aci_class='fvTenant',
-               aci_rn='tn-{0}'.format(tenant),
-               module_object=tenant,
-               target_filter={'name': tenant}
-           ),
-           subclass_1=dict(
-               aci_class='l3extOut',
-               aci_rn='out-{0}'.format(l3out),
-               module_object=l3out,
-               target_filter={'name': l3out}
-           ),
-           subclass_2=dict(
-               aci_class='l3extLNodeP',
-               aci_rn='lnodep-{0}'.format(node_profile),
-               module_object=node_profile,
-               target_filter={'name': node_profile}
-           ),
-           subclass_3=dict(
-               aci_class='l3extRsNodeL3OutAtt',
-               aci_rn='rsnodeL3OutAtt-[{0}]'.format(node_tdn),
-               module_object=node_tdn,
-               target_filter={'name': node_tdn}
-           ),
-           subclass_4=dict(
-               aci_class='ipRouteP',
-               aci_rn='rt-[{0}]'.format(prefix),
-               module_object=prefix,
-               target_filter={'name': prefix}
-           ),
-           subclass_5=dict(
-               aci_class='ipNexthopP',
-               aci_rn='nh-[{0}]'.format(nexthop),
-               module_object=nexthop,
-               target_filter={'name': nexthop}
-           )
-       )
+  # If "dn" = "uni/tn-ansible_tenant/out-ansible_l3out/lnodep-ansible_node_profile/", then the construct_url() will be constructed as follows:
 
-.. note:: rn is one section of dn, with the ID of the specific argument. Do not put the entire dn in the **aci_rn** of each argument. The method automatically constructs the dn using the rn of all the arguments above.
+  aci.construct_url(
+      root_class=dict(
+          aci_class='fvTenant',
+          aci_rn='tn-{0}'.format(tenant),
+          module_object=tenant,
+          target_filter={'name': tenant}
+      ),
+      subclass_1=dict(
+          aci_class='l3extOut',
+          aci_rn='out-{0}'.format(l3out),
+          module_object=l3out,
+          target_filter={'name': l3out}
+      ),
+      subclass_2=dict(
+          aci_class='l3extLNodeP',
+          aci_rn='lnodep-{0}'.format(node_profile),
+          module_object=node_profile,
+          target_filter={'name': node_profile}
+      )target_filter={'name': nexthop}
+      )
+  )
+
+**Note**: Any requirements/changes for values of arguments (object,object_prop1, etc.) such as conversion to boolean, letter case, or formatting/validating the inputs must be done before the ``construct_url()`` method is called. This is because the method will use the values as they are passed in the task, and it will not perform any additional validation or conversion.
 
 Getting the existing configuration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+12. aci.get_existing() should remain as is. It is used to get the existing configuration of the object.
+
 Once the URL and filter string have been built, the module is ready to retrieve the existing configuration for the object:
 
 * ``state: present`` retrieves the configuration to use as a comparison against what was entered in the task. All values that are different from the existing values will be updated.
@@ -402,19 +457,19 @@ Once the URL and filter string have been built, the module is ready to retrieve 
 
 When state is present
 ^^^^^^^^^^^^^^^^^^^^^
-When ``state: present``, the module needs to perform a diff against the existing configuration and the task entries. If any value needs to be updated, the module will make a POST request with only the items that need to be updated. In other words, the payload is built with the expected configuration and this is compared with the existing configuration that we retrieved. If we need to make a change, then we'll push the changed configuration to APIC. Some modules have children that are in a 1-to-1 relationship with another object; for these cases, the module can be used to manage the child objects.
+When ``state: present``, the module needs to perform a diff against the existing configuration and the task entries. If any value needs to be updated, the module will make a POST request with only the items that need to be updated. In other words, the payload is built with the expected configuration and this is compared with the existing configuration that was retrieved. If a change is needed, then the changed configuration will be pushed to APIC. Some modules have children that are in a 1-to-1 relationship with another object; for these cases, the module can be used to manage the child objects.
 
 Building the ACI payload
 """"""""""""""""""""""""
 The ``aci.payload()`` method is used to build a dictionary of the proposed object configuration. All parameters that were not provided a value in the task will be removed from the dictionary (both for the object and its children). Any parameter that does have a value will be converted to a string and added to the final dictionary object that will be used for comparison against the existing configuration.
 
-We remove the values of parameters that are empty. If there is a previous configuration for the value that is non-default, then the parameter will not be modified if we do not reset it. For example, if the description is set to something and then we run it again with no description, it will not change it to the default.
+Values of parameters that are set to "None" are removed. If there is a previous configuration for a non-default value, then the parameter will not be modified if it is not reset. For example, if the description is set to something and then the module is run again with no description, it will not change it to the default, but by setting it to None, it will remove the description from the payload.
 
-If parameters of the payload have been added in a recent version, we recommend adding the new parameters to the payload when the parameter is assigned a value. This is done to maintain backward compatibility.
+If parameters of the payload have been added in a recent version, it is recommended to add the new parameters to the payload when the parameter is assigned a value. This is done to maintain backward compatibility.
 
 The ``aci.payload()`` method takes 2 required arguments and one optional argument, depending on whether the module manages child objects.
 
-* ``aci_class`` is the APIC name for the object's class, for example ``aci_class='fvBD'``
+* ``aci_class`` is the APIC name for the object's class.
 * ``class_config`` is the set of attributes of the aci class objects to be used as the payload for the POST request
 
   + The keys should match the names used by the APIC.
@@ -423,36 +478,24 @@ The ``aci.payload()`` method takes 2 required arguments and one optional argumen
 * ``child_configs`` is optional and is a list of child config dictionaries.
 
   + The child configs include the full child object dictionary, not just the attributes configuration portion.
-  + The configuration portion is built the same way as the object.
+  + The configuration portion is built the same way as the parent object.
 
-.. code-block:: python
+* ``annotation`` is an optional string that can be used to add additional information to the object.
+  + If annotation is a supported attribute for a module it will be populated in the payload of that respective module.
 
-    aci.payload(
-        aci_class=aci_class,
-        class_config=dict(
-            name=bd,
-            descr=description,
-            type=bd_type,
-        ),
-        child_configs=[
-            dict(
-                fvRsCtx=dict(
-                    attributes=dict(
-                        tnFvCtxName=vrf
-                    ),
-                ),
-            ),
-        ],
-    )
-
-Sometimes the class config or child config depends on the parameter itself. If this is the case, we recommend creating them before building the aci payload.
+**Note**: When the class configuration or child configuration depends on specific parameters, it is recommended to create these configurations beforehand. This approach ensures that the payload passed to the aci.payload() function is accurately constructed based on the parameter values, allowing for precise and flexible management of both class and child objects before the final payload is built and applied.
 
 Performing the request
 """"""""""""""""""""""
-The ``get_diff()`` method is used to perform the diff and takes only one required argument, ``aci_class``. In other words, it is used to make a comparison between the ACI payload and the existing configuration, and only create what's actually needed between the two.
-Example: ``aci.get_diff(aci_class='fvBD')``
+13. When state is present, a payload needs to be constructed which will be posted to APIC. Payload takes class_config and child_config. The class_config has the main attributes. If new attributes are added in new versions of APIC, that attribute will be added to class_config only if it is assigned a value.
 
-The ``post_config()`` method is used to make the POST request to the APIC by taking the result from ``get_diff()``. This method doesn't take any arguments and handles check mode. Example: ``aci.post_config()``.
+Note - aci_rn must not contain the DN of the individual class. It is construct_url()'s task to build the entire DN leading to the target object using the series of RNs in the root class and the subsequent subclasses.
+
+14. ``get_diff()`` method takes one required argument, ``aci_class``, which is the APIC name for the class of the object being configured. The get_diff() method compares the existing configuration with the proposed configuration and returns a dictionary of the differences. Replace ``<object APIC class>`` with the appropriate APIC class name for the object being configured.
+        + The ``get_diff()`` method is used to perform the diff and takes only one required argument, ``aci_class``. In other words, it is used to make a comparison between the ACI payload and the existing configuration, and only create what's actually needed between the two.
+        + ``required_properties`` parameter in the ``get_diff()``function is used to ensure that certain essential properties are always included in the configuration difference output, even if they are not part of the changed attributes. When there is a difference between the proposed and existing configurations, and if required_properties is provided as a dictionary, its key-value pairs are added to the configuration dictionary before it is finalized. This guarantees that these required properties are present in the resulting configuration update sent to the APIC, supporting consistent and complete configuration management.
+
+    ``post_config()`` method is used to make the POST request to the APIC by taking the result from ``get_diff()``. This method doesn't take any arguments and handles check mode.
 
 Example code
 """"""""""""
@@ -483,6 +526,7 @@ Example code
 
         aci.post_config()
 
+15. The end of the module does not change and generally remains as is.
 
 When state is absent
 ^^^^^^^^^^^^^^^^^^^^
@@ -493,1243 +537,65 @@ If the task sets the state to absent, then the ``delete_config()`` method is all
         elif state == 'absent':
             aci.delete_config()
 
-
 Exiting the module
 ^^^^^^^^^^^^^^^^^^
-To have the module exit, call the ACIModule method ``exit_json()``. This method automatically takes care of returning the common return values for you.
+To have the module exit, call the ACIModule method ``exit_json()``. This method automatically takes care of returning the common return values.
 
 .. code-block:: text
 
         aci.exit_json()
 
-    if __name__ == '__main__':
+
+    if __name__ == "__main__":
         main()
 
-Documentation Section
----------------------
-All the parameters defined in the argument_spec, like the object_id, configurable properties of the object, parent object_id, state, etc., need to be documented in the same file as the module. The format of documentation is shown below:
-
-.. code-block:: yaml
-
-   DOCUMENTATION = r'''
-   ---
-   module: aci_<name_of_module>
-   short_description: Short description of the module being created (config:<name_of_class>).
-   description:
-   - Functionality one.
-   - Functionality two.
-   options:
-     object_id:
-       description:
-       - Description of the object.
-       type: Data type of object eg. 'str'
-       aliases: [ Alternate name of the object ]
-     object_prop1:
-       description:
-       - Description of property one.
-       type: Property's data type eg. 'int'
-       choices: [ choice one, choice two ]
-     object_prop2:
-       description:
-       - Description of property two.
-       type: Property's data type eg. 'bool'
-     state:
-       description:
-       - Use C(present) or C(absent) for adding or removing.
-       - Use C(query) for listing an object or multiple objects.
-       type: str
-       choices: [ absent, present, query ]
-       default: present
-   extends_documentation_fragment:
-   - cisco.aci.aci
-
-Examples Section
-----------------
-The examples section must consist of Ansible tasks which can be used as a reference to build playbooks. The format of this section is shown below:
-
-.. code-block:: yaml
-
-   EXAMPLES = r'''
-   - name: Add a new object
-     cisco.aci.aci_<name_of_module>:
-       host: apic
-       username: admin
-       password: SomeSecretePassword
-       object_id: id
-       object_prop1: prop1
-       object_prop2: prop2
-       state: present
-     delegate_to: localhost
-
-   - name: Update an object
-     cisco.aci.aci_<name_of_module>:
-       host: apic       username: admin
-       password: SomeSecretePassword
-       object_id: id
-       object_prop1: new_prop1
-       object_prop2: new_prop2
-       state: present
-     delegate_to: localhost
-
-   - name: Query an object
-     cisco.aci.aci_<name_of_module>:
-       host: apic
-       username: admin
-       password: SomeSecretePassword
-       object_id: id
-       state: query
-     delegate_to: localhost
-
-   - name: Query all objects
-     cisco.aci.aci_<name_of_module>:
-       host: apic
-       username: admin
-       password: SomeSecretePassword
-       state: query
-     delegate_to: localhost
-   '''
-.. note:: Make sure to test the examples since people generally copy and paste examples to use the module.
-
-Return Section
-----------------
-The RETURN section is used in every module and has the same content, so copy and paste it from any module.
-
-.. code-block:: python
-
-   RETURN = r'''
-            current:
-              description: The existing configuration from the APIC after the module has finished
-              returned: success
-              type: list
-              sample:
-                [
-                    {
-                        "fvTenant": {
-                            "attributes": {
-                                "descr": "Production environment",
-                                "dn": "uni/tn-production",
-                                "name": "production",
-                                "nameAlias": "",
-                                "ownerKey": "",
-                                "ownerTag": ""
-                            }
-                        }
-                    }
-                ]
-            error:
-              description: The error information as returned from the APIC
-              returned: failure
-              type: dict
-              sample:
-                {
-                    "code": "122",
-                    "text": "unknown managed object class foo"
-                }
-            raw:
-              description: The raw output returned by the APIC REST API (xml or json)
-              returned: parse error
-              type: str
-              sample: '<?xml version="1.0" encoding="UTF-8"?><imdata totalCount="1"><error code="122" text="unknown managed object class "/></imdata>'
-            sent:
-              description: The actual/minimal configuration pushed to the APIC
-              returned: info
-              type: list
-              sample:
-                {
-                    "fvTenant": {
-                        "attributes": {
-                            "descr": "Production environment"
-                        }
-                    }
-                }
-            previous:
-              description: The original configuration from the APIC before the module has started
-              returned: info
-              type: list
-              sample:
-                [
-                    {
-                        "fvTenant": {
-                            "attributes": {
-                                "descr": "Production",
-                                "dn": "uni/tn-production",
-                                "name": "production",
-                                "nameAlias": "",
-                                "ownerKey": "",
-                                "ownerTag": ""
-                            }
-                        }
-                    }
-                ]
-            proposed:
-              description: The assembled configuration from the user-provided parameters
-              returned: info
-              type: dict
-              sample:
-                {
-                    "fvTenant": {
-                        "attributes": {
-                            "descr": "Production environment",
-                            "name": "production"
-                        }
-                    }
-                }
-            filter_string:
-              description: The filter string used for the request
-              returned: failure or debug
-              type: str
-              sample: ?rsp-prop-include=config-only
-            method:
-              description: The HTTP method used for the request to the APIC
-              returned: failure or debug
-              type: str
-              sample: POST
-            response:
-              description: The HTTP response from the APIC
-              returned: failure or debug
-              type: str
-              sample: OK (30 bytes)
-            status:
-              description: The HTTP status from the APIC
-              returned: failure or debug
-              type: int
-              sample: 200
-            url:
-              description: The HTTP url used for the request to the APIC
-              returned: failure or debug
-              type: str
-              sample: https://10.11.12.13/api/mo/uni/tn-production.json
-            '''
-
-Example Module
---------------
-The following example consists of Documentation, Examples and Module Sections discussed above. All these sections must be present in a single file: **aci_<aci-module-name>.py** which goes inside the **modules** directory.
-
-.. code-block:: python
-
-      #!/usr/bin/python
-      # -*- coding: utf-8 -*-
-
-      # Copyright: (c) <year>, <Name> (@<github id>)
-      # GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
-
-      from __future__ import absolute_import, division, print_function
-      __metaclass__ = type
-
-      ANSIBLE_METADATA = {'metadata_version': '1.1',
-                          'status': ['preview'],
-                          'supported_by': 'community'}
-
-      DOCUMENTATION = r'''
-      ---
-      module: aci_l2out
-      short_description: Manage Layer2 Out (L2Out) objects.
-      description:
-      - Manage Layer2 Out configuration on Cisco ACI fabrics.
-      options:
-        tenant:
-          description:
-          - Name of an existing tenant.
-          type: str
-        l2out:
-          description:
-          - The name of outer layer2.
-          type: str
-          aliases: [ 'name' ]
-        description:
-          description:
-          - Description for the L2Out.
-          type: str
-        bd:
-          description:
-          - Name of the Bridge domain which is associated with the L2Out.
-          type: str
-        domain:
-          description:
-          - Name of the external L2 Domain that is being associated with L2Out.
-          type: str
-        vlan:
-          description:
-          - The VLAN which is being associated with the L2Out.
-          type: int
-        state:
-          description:
-          - Use C(present) or C(absent) for adding or removing.
-          - Use C(query) for listing an object or multiple objects.
-          type: str
-          choices: [ absent, present, query ]
-          default: present
-        name_alias:
-          description:
-          - The alias for the current object. This relates to the nameAlias field in ACI.
-          type: str
-      extends_documentation_fragment:
-      - cisco.aci.aci
-
-      notes:
-      - The C(tenant) must exist before using this module in your playbook.
-        The M(cisco.aci.aci_tenant) modules can be used for this.
-      seealso:
-      - name: APIC Management Information Model reference
-        description: More information about the internal APIC class B(fvTenant).
-        link: https://developer.cisco.com/docs/apic-mim-ref/
-      author:
-      - <Author's Name> (@<github id>)
-      '''
-
-      EXAMPLES = r'''
-      - name: Add a new L2Out
-        cisco.aci.aci_l2out:
-          host: apic
-          username: admin
-          password: SomeSecretePassword
-          tenant: Auto-Demo
-          l2out: l2out
-          description: via Ansible
-          bd: bd1
-          domain: l2Dom
-          vlan: 3200
-          state: present
-          delegate_to: localhost
-
-      - name: Remove an L2Out
-        cisco.aci.aci_l2out:
-          host: apic
-          username: admin
-          password: SomeSecretePassword
-          tenant: Auto-Demo
-          l2out: l2out
-          state: absent
-          delegate_to: localhost
-
-      - name: Query an L2Out
-        cisco.aci.aci_l2out:
-          host: apic
-          username: admin
-          password: SomeSecretePassword
-          tenant: Auto-Demo
-          l2out: l2out
-          state: query
-          delegate_to: localhost
-          register: query_result
-
-      - name: Query all L2Outs in a specific tenant
-        cisco.aci.aci_l2out:
-          host: apic
-          username: admin
-          password: SomeSecretePassword
-          tenant: Auto-Demo
-          state: query
-          delegate_to: localhost
-          register: query_result
-      '''
-
-      RETURN = r'''
-         current:
-           description: The existing configuration from the APIC after the module has finished
-           returned: success
-           type: list
-           sample:
-             [
-                 {
-                     "fvTenant": {
-                         "attributes": {
-                             "descr": "Production environment",
-                             "dn": "uni/tn-production",
-                             "name": "production",
-                             "nameAlias": "",
-                             "ownerKey": "",
-                             "ownerTag": ""
-                         }
-                     }
-                 }
-             ]
-         error:
-           description: The error information as returned from the APIC
-           returned: failure
-           type: dict
-           sample:
-             {
-                 "code": "122",
-                 "text": "unknown managed object class foo"
-             }
-         raw:
-           description: The raw output returned by the APIC REST API (xml or json)
-           returned: parse error
-           type: str
-           sample: '<?xml version="1.0" encoding="UTF-8"?><imdata totalCount="1"><error code="122" text="unknown managed object class "/></imdata>'
-         sent:
-           description: The actual/minimal configuration pushed to the APIC
-           returned: info
-           type: list
-           sample:
-             {
-                 "fvTenant": {
-                     "attributes": {
-                         "descr": "Production environment"
-                     }
-                 }
-             }
-         previous:
-           description: The original configuration from the APIC before the module has started
-           returned: info
-           type: list
-           sample:
-             [
-                 {
-                     "fvTenant": {
-                         "attributes": {
-                             "descr": "Production",
-                             "dn": "uni/tn-production",
-                             "name": "production",
-                             "nameAlias": "",
-                             "ownerKey": "",
-                             "ownerTag": ""
-                         }
-                     }
-                 }
-             ]
-         proposed:
-           description: The assembled configuration from the user-provided parameters
-           returned: info
-           type: dict
-           sample:
-             {
-                 "fvTenant": {
-                     "attributes": {
-                         "descr": "Production environment",
-                         "name": "production"
-                     }
-                 }
-             }
-         filter_string:
-           description: The filter string used for the request
-           returned: failure or debug
-           type: str
-           sample: ?rsp-prop-include=config-only
-         method:
-           description: The HTTP method used for the request to the APIC
-           returned: failure or debug
-           type: str
-           sample: POST
-         response:
-           description: The HTTP response from the APIC
-           returned: failure or debug
-           type: str
-           sample: OK (30 bytes)
-         status:
-           description: The HTTP status from the APIC
-           returned: failure or debug
-           type: int
-           sample: 200
-         url:
-           description: The HTTP url used for the request to the APIC
-           returned: failure or debug
-           type: str
-           sample: https://10.11.12.13/api/mo/uni/tn-production.json
-         '''
-
-      from ansible.module_utils.basic import AnsibleModule
-      from ansible_collections.cisco.aci.plugins.module_utils.aci import ACIModule, aci_argument_spec
-
-
-      def main():
-          argument_spec = aci_argument_spec()
-          argument_spec.update(
-              bd=dict(type='str'),
-              l2out=dict(type='str', aliases=['name']),
-              domain=dict(type='str'),
-              vlan=dict(type='int'),
-              description=dict(type='str'),
-              state=dict(type='str', default='present', choices=['absent', 'present', 'query']),
-              tenant=dict(type='str'),
-              name_alias=dict(type='str'),
-          )
-
-          module = AnsibleModule(
-              argument_spec=argument_spec,
-              supports_check_mode=True,
-              required_if=[
-                  ['state', 'absent', ['l2out', 'tenant']],
-                  ['state', 'present', ['bd', 'l2out', 'tenant', 'domain', 'vlan']],
-              ],
-          )
-
-          bd = module.params.get('bd')
-          l2out = module.params.get('l2out')
-          description = module.params.get('description')
-          domain = module.params.get('domain')
-          vlan = module.params.get('vlan')
-          state = module.params.get('state')
-          tenant = module.params.get('tenant')
-          name_alias = module.params.get('name_alias')
-          child_classes = ['l2extRsEBd', 'l2extRsL2DomAtt', 'l2extLNodeP']
-
-          aci = ACIModule(module)
-          aci.construct_url(
-              root_class=dict(
-                  aci_class='fvTenant',
-                  aci_rn='tn-{0}'.format(tenant),
-                  module_object=tenant,
-                  target_filter={'name': tenant},
-              ),
-              subclass_1=dict(
-                  aci_class='l2extOut',
-                  aci_rn='l2out-{0}'.format(l2out),
-                  module_object=l2out,
-                  target_filter={'name': l2out},
-              ),
-              child_classes=child_classes,
-          )
-
-          aci.get_existing()
-
-          if state == 'present':
-              child_configs = [
-                  dict(
-                      l2extRsL2DomAtt=dict(
-                          attributes=dict(
-                              tDn='uni/l2dom-{0}'.format(domain)
-                          )
-                      )
-                  ),
-                  dict(
-                      l2extRsEBd=dict(
-                          attributes=dict(
-                              tnFvBDName=bd, encap='vlan-{0}'.format(vlan)
-                          )
-                      )
-                  )
-              ]
-
-              aci.payload(
-                  aci_class='l2extOut',
-                  class_config=dict(
-                      name=l2out,
-                      descr=description,
-                      dn='uni/tn-{0}/l2out-{1}'.format(tenant, l2out),
-                      nameAlias=name_alias
-                  ),
-                  child_configs=child_configs,
-              )
-
-              aci.get_diff(aci_class='l2extOut')
-
-              aci.post_config()
-
-          elif state == 'absent':
-              aci.delete_config()
-
-          aci.exit_json()
-
-
-      if __name__ == "__main__":
-          main()
-
-Building Your Own Module
-------------------------
-
-Now that we have explained and seen the components of the ACI module structure, let us build our own module. The following section shows a basic and practical approach to building a module with the help of an existing module. This approach makes it easier to create a new module without having to write everything from scratch.
-
-The purpose of this section is to show how to build a module based on an existing module. This is done by selecting a module that is similar to the one you want to build in order to reduce the number of changes needed. For this, you can either take the parent object and append the attributes required for your module. If this is not possible, use a sibling object or an object at the same level.
-
-Let's build a module for l3out static routes using the existing module for l3out logical node:
-aci_l3out_logical_node -> aci_l3out_static_routes
-
-1. In the modules directory located in the plugins directory of the collection, select and copy the contents of the aci_l3out_logical_node module, paste it into a file, and save it in .py format. We name this file aci_l3out_static_routes. To create a name for the new module, look at the names of other modules in the directory for consistency.
-
-2. Change the copyright section by adding your name and email address: # Copyright: (c) <year>, <Name> (<email>) below:
-
-.. code-block:: python
-
-   #!/usr/bin/python
-   # -*- coding: utf-8 -*-
-
-   # Copyright: (c) <year>, <Name> (<email>)
-   # GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
-
-   from __future__ import absolute_import, division, print_function
-   __metaclass__ = type
-
-   ANSIBLE_METADATA = {
-       'metadata_version': '1.1',
-       'status': ['preview'],
-       'supported_by': 'community'
-   }
-
-3. In the documentation section, we begin by changing the name of the module, its short description and the description of the functions being performed on the object. The description of the module must be followed by the options which is a list of attributes and each attribute should include the name, description, data type, aliases(if applicable), choices(if applicable) and default(if applicable) of all the parameters that will be consumed by the object. For our aci_l3out_static_routes module this would include additon of new options to aci_l3out_logical_node module that include description, prefix, track_policy, preference, bfd and removal of router_id and router_id_as_loopback from aci_l3out_logical_node module. 
-
-The changes made are shown below:
-
-.. code-block:: yaml
-
-      DOCUMENTATION = r'''
-      ---
-      module: aci_l3out_logical_node
-      module: aci_l3out_static_routes
-      short_description: Manage Layer 3 Outside (L3Out) logical node profile nodes (l3ext:RsNodeL3OutAtt) 
-      short_description: Manage Static routes object (l3ext:ipRouteP)
-      description:
-      - Bind nodes to node profiles on Cisco ACI fabrics.
-       description:
-      - Manage External Subnet objects (l3ext:ipRouteP).
-      options:
-        description:
-          description:
-          - The description for the static routes.
-          type: str
-          aliases: [ descr ]
-        tenant:
-          description:
-          - Name of an existing tenant.
-          type: str
-          aliases: [ tenant_name ]
-        l3out:
-          description:
-          - Name of an existing L3Out.
-          type: str
-          aliases: [ l3out_name ]
-        logical_node:
-          description:
-          - Name of an existing logical node profile.
-          type: str
-          aliases: [ node_profile, node_profile_name ]
-        pod_id:
-          description:
-          - Existing podId.
-          type: int
-        node_id:
-          description:
-          - Existing nodeId.
-          type: int
-        prefix:
-          description:
-          - Configure IP and next hop IP for the routed outside network.
-          type: str
-          aliases: [ route ]
-        track_policy:
-          description:
-          - Relation definition for static route to TrackList.
-          type: str
-        preference:
-          description:
-          - Administrative preference value for the route.
-          type: int
-        bfd:
-          description:
-          - Determines if bfd is required for route control.
-          - The APIC defaults to C(null) when unset during creation.
-          type: str
-          choices: [ bfd, null ]
-        state:
-          description:
-          - Use C(present) or C(absent) for adding or removing.
-          - Use C(query) for listing an object or multiple objects.
-          type: str
-          choices: [ absent, present, query ]
-          default: present
-        name_alias:
-          description:
-          - The alias for the current object. This relates to the nameAlias field in ACI.
-          type: str
-      extends_documentation_fragment:
-      - cisco.aci.aci
-      
-4. The options are followed by notes, which usually contain any dependencies of the module being created with the parent modules that exist in the collection. We also include a "see also" section, which provides a link to the class being used in the module, followed by the author's name and GitHub ID as shown below.
-
-.. code-block:: yaml
-
-      notes:
-      - The C(tenant), C(l3out), C(logical_node), C(fabric_node) and C(prefix) used must exist before using this module in your playbook.
-        The M(cisco.aci.aci_tenant) and M(cisco.aci.aci_l3out) modules can be used for this.
-      seealso:
-      - module: cisco.aci.aci_tenant
-      - module: cisco.aci.aci_l3out
-      - name: APIC Management Information Model reference
-        description: More information about the internal APIC class B(l3ext:Out).
-        link: https://developer.cisco.com/docs/apic-mim-ref/
-      author:
-      - <author's name> (<author's github id>)
-      '''
-
-5. Our documentation section is complete. Next, we skim through the examples section of the copied module and make changes to it by adding the necessary parameters to all the examples. Please note that removing and querying an object will only contain the object name and no object parameters. "Query All" will not have any parameters, ensuring that all the objects of the class being worked upon are returned.
-
-.. code-block:: yaml
-
-   EXAMPLES = r'''
-   - name: Create static routes
-     cisco.aci.aci_l3out_static_routes:
-       host: apic
-       username: admin
-       password: SomeSecretPassword
-       tenant: tenantName
-       l3out: l3out
-       logical_node: nodeName
-       node_id: 101
-       pod_id: 1
-       prefix: 10.10.0.0/16
-     delegate_to: localhost
-
-   - name: Delete static routes
-     cisco.aci.aci_l3out_static_routes:
-       host: apic
-       username: admin
-       password: SomeSecretPassword
-       tenant: tenantName
-       l3out: l3out
-       logical_node: nodeName
-       node_id: 101
-       pod_id: 1
-       prefix: 10.10.0.0/16
-     delegate_to: localhost
-
-   - name: Query for a specific MO under l3out
-     cisco.aci.aci_l3out_static_routes:
-       host: apic
-       username: admin
-       password: SomeSecretPassword
-       tenant: tenantName
-       l3out: l3out
-       logical_node: nodeName
-       node_id: 101
-       pod_id: 1
-       prefix: 10.10.0.0/16
-     delegate_to: localhost
-
-   - name: Query for all static routes
-     cisco.aci.aci_l3out_static_routes:
-       host: apic
-       username: admin
-       password: SomeSecretPassword
-       tenant: production
-       state: query
-     delegate_to: localhost
-   '''
-
-6. We leave the Return section as is and then proceed to the main code.
-
-.. code-block:: yaml
-
-   RETURN = r'''
-   current:
-     description: The existing configuration from the APIC after the module has finished
-     returned: success
-     type: list
-     sample:
-       [
-           {
-               "fvTenant": {
-                   "attributes": {
-                       "descr": "Production environment",
-                       "dn": "uni/tn-production",
-                       "name": "production",
-                       "nameAlias": "",
-                       "ownerKey": "",
-                       "ownerTag": ""
-                   }
-               }
-           }
-       ]
-   error:
-     description: The error information as returned from the APIC
-     returned: failure
-     type: dict
-     sample:
-       {
-           "code": "122",
-           "text": "unknown managed object class foo"
-       }
-   raw:
-     description: The raw output returned by the APIC REST API (xml or json)
-     returned: parse error
-     type: str
-     sample: '<?xml version="1.0" encoding="UTF-8"?><imdata totalCount="1"><error code="122" text="unknown managed object class foo"/></imdata>'
-   sent:
-     description: The actual/minimal configuration pushed to the APIC
-     returned: info
-     type: list
-     sample:
-       {
-           "fvTenant": {
-               "attributes": {
-                   "descr": "Production environment"
-               }
-           }
-       }
-   previous:
-     description: The original configuration from the APIC before the module has started
-     returned: info
-     type: list
-     sample:
-       [
-           {
-               "fvTenant": {
-                   "attributes": {
-                       "descr": "Production",
-                       "dn": "uni/tn-production",
-                       "name": "production",
-                       "nameAlias": "",
-                       "ownerKey": "",
-                       "ownerTag": ""
-                   }
-               }
-           }
-       ]
-   proposed:
-     description: The assembled configuration from the user-provided parameters
-     returned: info
-     type: dict
-     sample:
-       {
-           "fvTenant": {
-               "attributes": {
-                   "descr": "Production environment",
-                   "name": "production"
-               }
-           }
-       }
-   filter_string:
-     description: The filter string used for the request
-     returned: failure or debug
-     type: str
-     sample: ?rsp-prop-include=config-only
-   method:
-     description: The HTTP method used for the request to the APIC
-     returned: failure or debug
-     type: str
-     sample: POST
-   response:
-     description: The HTTP response from the APIC
-     returned: failure or debug
-     type: str
-     sample: OK (30 bytes)
-   status:
-     description: The HTTP status from the APIC
-     returned: failure or debug
-     type: int
-     sample: 200
-   url:
-     description: The HTTP url used for the request to the APIC
-     returned: failure or debug
-     type: str
-     sample: https://10.11.12.13/api/mo/uni/tn-production.json
-   '''
-
-
-7. The following import section is generally left untouched, but if you add a shared method in the library, you might need to import it here.
-
-.. code-block:: python
-
-   from ansible_collections.cisco.aci.plugins.module_utils.aci import ACIModule, aci_argument_spec
-   from ansible.module_utils.basic import AnsibleModule
-
-8. In the main function, the argument_spec variable defines all the arguments necessary for this module and is based on aci_argument_spec. We add all the arguments we defined previously in the documentation section to this variable. In our case, we would add description, prefix, track_policy, preference, and bfd to the section below and remove router_id and router_id_as_loopback.
-
-.. code-block:: python
-
-     def main():
-       argument_spec = aci_argument_spec()
-       argument_spec.update(
-           tenant=dict(type='str', aliases=['tenant_name']),  
-           l3out=dict(type='str', aliases=['l3out_name']),  
-           logical_node=dict(type='str', aliases=['node_profile', 'node_profile_name']),  
-           pod_id=dict(type='int'),
-           node_id=dict(type='int'),
-           prefix=dict(type='str', aliases=['route']),
-           track_policy=dict(type='str'),
-           preference=dict(type='int'),
-           bfd=dict(type='str', choices=['bfd', None]),
-           description=dict(type='str', aliases=['descr']),
-           state=dict(type='str', default='present', choices=['absent', 'present', 'query']),
-           name_alias=dict(type='str'),
-    )
-
-9. The required_if variable has the following arguments. We do not set the arguments below for all states because we need to use "Query All," which doesn't need those arguments. However, we still need the user to fill in the arguments when they want to create or delete something. That's why we put them in required_if, which allows us to specify what attributes are required when state is present or absent. If any of the attributes below —'prefix', 'node_id', 'pod_id', 'logical_node', 'l3out', and 'tenant' are missing in the task that adds or deletes the object in the playbook, Ansible will immediately warn the user that the attributes are missing.
-
-.. code-block:: python
-
-      module = AnsibleModule(
-        argument_spec=argument_spec,
-        supports_check_mode=True,
-        required_if=[
-            ['state', 'present', ['prefix', 'node_id', 'pod_id', 'logical_node', 'l3out', 'tenant']],
-            ['state', 'absent', ['prefix', 'node_id', 'pod_id', 'logical_node', 'l3out', 'tenant']],
-        ],
-    )
-
-.. code-block:: python
-
-   aci = ACIModule(module)
-
-10. The above instantiation (required for all modules) is followed by code that is used to get attributes from the playbook that correspond to all the properties of objects defined in the main() function above. This is also where validations and string concatenations are done. We have assigned fabric_node with a part of rn using string concatenation. This is done to make certain operations easier, which are used later in the code. The child class 'ipNexthopP', which is in a 1-to-1 relationship with the class 'ipRouteP', is in a list. Child classes that are dependent on an attribute are only required when the attribute is defined, as seen below with track_policy. The child class 'ipRsRouteTrack' is appended to the list, which already has 'ipNexthopP'.
-
-.. code-block:: python
-
-    tenant = module.params.get('tenant')
-    l3out = module.params.get('l3out')
-    logical_node = module.params.get('logical_node')
-    node_id = module.params.get('node_id')
-    pod_id = module.params.get('pod_id')
-    prefix = module.params.get('prefix')
-    track_policy = module.params.get('track_policy')
-    preference = module.params.get('preference')
-    bfd = module.params.get('bfd')
-    description = module.params.get('description')
-    state = module.params.get('state')
-    name_alias = module.params.get('name_alias')
-
-    fabric_node = 'topology/pod-{0}/node-{1}'.format(pod_id, node_id)
-    child_classes = ['ipNexthopP']
-    if track_policy is not None:
-       child_classes.append('ipRsRouteTrack')
-
-11. The following section constructs a filter to target a set of entries that match certain criteria at the level of the target DN and in the subtree below it. The construct_url function below is used to build the appropriate DN by using the tenant as the root class and other subsequent subclasses up to 'ipRouteP'.
-
-Note - aci_rn must not contain the DN of the individual class. It is construct_url()'s task to build the entire DN leading to the target object using the series of RNs in the root class and the subsequent subclasses.
-
-.. code-block:: python
-
-      aci.construct_url(
-        root_class=dict(
-            aci_class='fvTenant',
-            aci_rn='tn-{0}'.format(tenant),
-            module_object=tenant,
-            target_filter={'name': tenant},
-        ),
-        subclass_1=dict(
-            aci_class='l3extOut',
-            aci_rn='out-{0}'.format(l3out),
-            module_object=l3out,
-            target_filter={'name': l3out},
-        ),
-        subclass_2=dict(
-            aci_class='l3extLNodeP',
-            aci_rn='lnodep-{0}'.format(logical_node),
-            module_object=logical_node,
-            target_filter={'name': logical_node},
-        ),
-        subclass_3=dict(
-            aci_class='l3extRsNodeL3OutAtt',
-            aci_rn='rsnodeL3OutAtt-[{0}]'.format(fabric_node),
-            module_object=fabric_node,
-            target_filter={'name': fabric_node},
-        ),
-        **subclass_4=dict(**
-            **aci_class='ipRouteP',**
-            **aci_rn='rt-[{0}]'.format(prefix),**
-            **module_object=prefix,**
-            **target_filter={'name': prefix},**
-        **),**
-        **child_classes=child_classes**
-    )
-
-12. aci.get_existing() should remain as is. It is used to get the existing configuration of 'ipRouteP'.
-
-13. When state is present, we need to construct a payload which will be posted to APIC. Payload takes class_config and child_config. The class_config has the main attributes. If new attributes are added in new versions of APIC, we will add that attribute to class_config only if it is assigned a value.
-
-.. code-block:: python
-
-      if state == 'present':
-        child_configs = []
-        class_config = dict(
-            descr=description,
-            ip=prefix,
-            pref=preference,
-            nameAlias=name_alias,
-        )
-        if bfd is not None:
-            class_config['rtCtrl'] = bfd
-
-        if track_policy is not None:
-            tDn = 'uni/tn-{0}/tracklist-{1}'.format(tenant, track_policy)
-            child_configs.append({'ipRsRouteTrack': {'attributes': {'tDn': tDn}}})
-
-        aci.payload(
-            aci_class='ipRouteP',
-            class_config=class_config,
-            child_configs=child_configs
-        ),
-
-
-14. The payload function is followed by get_diff(), which is used to get the difference between the proposed and existing configurations of 'ipRouteP'. Here, the aci_class is changed to the class name your module is going to manage.
-
-.. code-block:: python
-
-       #aci.get_diff(aci_class='l3extRsNodeL3OutAtt')
-       aci.get_diff(aci_class='ipRouteP')
-
-       aci.post_config()
-
-15. The end of the module does not change and generally remains as is.
-
-.. code-block:: python
-
-      elif state == 'absent':
-          aci.delete_config()
-
-      aci.exit_json()
-
-
-    if __name__ == '__main__':
-        main()
-
-Testing Our Module
-------------------
-
-Now that we have seen how a module can be built using another, let us look at testing our module. We need to test our module to make sure that it works for all states: present, absent, and query. The following section shows a basic and practical approach to building a test file with the help of another test file. This makes it easier to complete the test file without having to write everything from scratch.
-
-Let's build a test file for our l3out static routes using the existing test for l3out logical node:
-aci_l3out_logical_node -> aci_l3out_static_routes
-
-1. In the **tests** directory of our collection, we have the **integration** directory. The **integration** directory consists of **targets**, which has directories for all the test files of modules that currently exist in our collection. We go to the **targets** directory and copy the aci_l3out_logical_node directory, then paste it in the same directory as aci_l3out_static_routes, which should be the same as the name of our module. Upon opening the directory, we find the main.yml file. We open this file and make the following changes.
-
-2. The copyright section should be changed to your credentials.
-
-.. code-block:: yaml
-
-   # Copyright: (c) <year>, <Name> (@<github id>)
-
-2. The following section verifies that we have the ACI APIC host, ACI username, and ACI password defined in the inventory. These will be used in every task of the test file. The inventory file is located in the inventory directory. More information on this directory is given below, after the test file.
-
-.. code-block:: yaml
-
-   - name: Test that we have an ACI APIC host, ACI username and ACI password
-     fail:
-       msg: 'Please define the following variables: aci_hostname, aci_username and aci_password.'
-     when: aci_hostname is not defined or aci_username is not defined or aci_password is not defined
-
-3. The next section should remain as is. set_fact stores the values of variables such as aci_hostname, aci_username, etc. in &aci_info. This will be referenced in all tasks.
-
-.. code-block:: yaml
-
-      # GET Credentials from the inventory
-      - name: Set vars
-        set_fact: 
-          aci_info: &aci_info
-            host: "{{ aci_hostname }}"
-            username: "{{ aci_username }}"
-            password: "{{ aci_password }}"
-            validate_certs: '{{ aci_validate_certs | default(false) }}'
-            use_ssl: '{{ aci_use_ssl | default(true) }}'
-            use_proxy: '{{ aci_use_proxy | default(true) }}'
-            output_level: debug
-
-4. The next section deletes the tenant. This ensures that we don't have the root object configuration on our APIC. This is done to avoid idempotency issues later during the creation of other objects pertaining to our module. We verify the result of each task in the test file, which also checks for idempotency. If an object such as the tenant already exists before the test begins, these verification tests may fail.
-
-.. code-block:: yaml
-
-   - name: Remove the ansible_tenant
-     aci_tenant:
-       <<: *aci_info 
-       tenant: ansible_tenant
-       state: absent
-
-5. We begin by adding tasks to post configuration to the APIC. This includes creation of all the classes such as tenant and l3out that were used in the construct_url function in our module.
-
-.. code-block:: yaml
-
-      - name: Add a new tenant
-        aci_tenant:
-          <<: *aci_info 
-          tenant: ansible_tenant
-          description: Ansible tenant
-          state: present
-
-      - name: Add a new L3Out
-        aci_l3out:
-          <<: *aci_info
-          tenant: ansible_tenant
-          name: ansible_l3out
-          description: L3Out for ansible_tenant tenant
-          domain: ansible_dom
-          vrf: ansible_vrf
-          l3protocol: ospf
-          route_control: export
-          state: present
-
-      - name: Add a logical node
-        cisco.aci.aci_l3out_logical_node:
-          <<: *aci_info
-          tenant: ansible_tenant
-          l3out: ansible_l3out
-          logical_node: lNode
-          pod_id: 1
-          node_id: 101
-          router_id: "10.1.0.1"
-          router_id_as_loopback: 'yes'
-          state: present
-
-.. code-block:: text
-
-6. The next section consists of adding tasks for all aspects of our module. We include Ansible's register attribute to save the result of the task. The procedure is as follows:
-   1. We include the task for adding aci_l3out_static_routes using state: present with no attribute bfd. It consists of most attributes defined in our module.
-   2. We include the task for adding aci_l3out_static_routes again using state: present with the same attributes used in step 1 to check for idempotency.
-   3. We include the task for adding aci_l3out_static_routes using state: present with the bfd attribute.
-   4. We include the task for querying aci_l3out_static_routes for the new attribute bfd using state: query.
-   5. We include the task for adding a new aci_l3out_static_routes using state: present.
-   6. We include the task to query all aci_l3out_static_routes under the root object: tenant, using state: query.
-   7. We include the task for deleting aci_l3out_static_routes using state: absent.
-
-.. code-block:: yaml
-
-      - name: Add static routes
-        aci_l3out_static_routes:
-          <<: *aci_info
-          tenant: ansible_tenant
-          l3out: ansible_l3out
-          logical_node: lNode
-          node_id: 101
-          pod_id: 1 
-          prefix: 10.1.0.1/24
-          state: present
-         register: static1
-
-       - name: Add static routes again
-         aci_l3out_static_routes:
-          <<: *aci_info
-          tenant: ansible_tenant
-          l3out: ansible_l3out
-          logical_node: lNode
-          node_id: 101
-          pod_id: 1 
-          prefix: 10.1.0.1/24
-          state: present
-         register: static2
-        
-      - name: Add static routes containing bfd
-         aci_l3out_static_routes:
-          <<: *aci_info
-          tenant: ansible_tenant
-          l3out: ansible_l3out
-          logical_node: lNode
-          bfd: bfd
-          node_id: 101
-          pod_id: 1 
-          prefix: 10.1.0.1/24
-          state: present
-         register: static_bfd
-         
-       - name: Query static routes containing bfd
-         aci_l3out_static_routes:
-          <<: *aci_info
-          tenant: ansible_tenant
-          l3out: ansible_l3out
-          logical_node: lNode
-          node_id: 101
-          pod_id: 1
-          bfd: bfd
-          prefix: 10.1.0.1/24
-          state: query
-        register: query_static_bfd
-        
-      - name: Add another static route
-         aci_l3out_static_routes:
-          <<: *aci_info
-          tenant: ansible_tenant
-          l3out: ansible_l3out
-          logical_node: lNode
-          node_id: 101
-          pod_id: 1 
-          prefix: 10.1.0.0/24
-          state: present
-         register: static_another
-
-      - name: Query all static routes
-        aci_l3out_static_routes:
-          <<: *aci_info
-          tenant: ansible_tenant
-          state: query
-        register: static_all
-
-      - name: Remove static routes
-        aci_l3out_static_routes:
-          <<: *aci_info
-          tenant: ansible_tenant
-          l3out: ansible_l3out
-          logical_node: lNode
-          node_id: 101
-          pod_id: 1
-          prefix: 10.1.0.1/24
-          state: absent
-         register: delete_static
-         
-
-.. code-block:: text
-
-After inclusion of all the tasks, the configuration has been posted, modified, and deleted on our APIC. By using the values registered with results after each task, we can verify these results by comparing them with the expected response from the APIC. The result stored in the registered value is a list of dictionaries, and we access the attributes using the dot operator. If all the verifications below pass, our testing is complete.
-
-.. code-block:: yaml
-
-      - name: Verify nm_add_node
-        assert:
-          that:
-            - static1 is changed
-            - static2 is not changed
-            - static_bfd is changed
-            - static1.current.0.ipRouteP.attributes.dn == "uni/tn-ansible_tenant/out-ansible_l3out/lnodep-lNode/rsnodeL3OutAtt-[topology/pod-1/node-101]/rt-[10.1.0.1/24]"
-            - static2.current.0.ipRouteP.attributes.dn == "uni/tn-ansible_tenant/out-ansible_l3out/lnodep-lNode/rsnodeL3OutAtt-[topology/pod-1/node-101]/rt-[10.1.0.1/24]"
-            - static_bfd.current.0.ipRouteP.attributes.dn == "uni/tn-ansible_tenant/out-ansible_l3out/lnodep-lNode/rsnodeL3OutAtt-[topology/pod-1/node-101]/rt-[10.1.0.1/24]"
-            - static_bfd.current.0.ipRouteP.attributes.rtCtrl == "bfd"
-            - query_static_bfd.current.0.ipRouteP.attributes.dn == "uni/tn-ansible_tenant/out-ansible_l3out/lnodep-lNode/rsnodeL3OutAtt-[topology/pod-1/node-101]/rt-[10.1.0.1/24]"
-            - query_static_bfd.current.0.ipRouteP.attributes.rtCtrl == "bfd"
-            - static_all.current | length == 2
-            - delete_static.current == []
-
-Sanity Checks, Testing ACI Integration, and Generating Coverage Report
-----------------------------------------------------------------------
-Sanity tests are performed on our module to make sure that it adheres to Ansible coding standards. A few examples include verifying whether our module's documentation is supported on all Python versions, and checking YAML files for syntax and formatting issues, etc.
-
-ACI integration tests are end-to-end tests performed to check that the code path functions of our collection are working as expected.
-
-Code coverage reports are generated in HTML format and make it easy for us to identify untested code for which more tests should be written.
-
-Steps required to perform tests:
-
-1. Ansible uses an inventory file to keep track of which hosts are part of your APIC, and how to reach them for running commands and playbooks using credentials for the APIC. To update the inventory, go to **ansible-aci -> tests -> integration -> inventory.networking** and update the file with the credentials of your APIC.
-
-.. code-block:: ini
-
-   [aci]
-   <apic-label-name> ansible_host=<apic-host> ansible_connection=local aci_hostname=<apic-host> 
-   aci_username=<apic-username> aci_password= <apic-password>
-
-2. Go to **ansible-aci** in the terminal and test the new module using the following commands. To make it easier to run all the commands in one go, we store the commands in a script and run the script.
-
-.. code-block:: Blocks
-
-      rm -rf cisco-aci-*
-      ansible-galaxy collection build --force
-      ansible-galaxy collection install cisco-aci-* --force
-      cd ~/.ansible/collections/ansible_collections/cisco/aci
-      ansible-test sanity --docker --color --truncate 0 -v
-      ansible-test network-integration --docker --color --truncate 0 -vvv --coverage aci_<your module name>
-      ansible-test coverage report
-      ansible-test coverage html
-      open ~/.ansible/collections/ansible_collections/cisco/aci/tests/output/reports/coverage/index.html
-
-.. code-block:: text
-
-   ansible-galaxy collection build --force builds a collection artifact that can be stored in a central repository. By default, this command builds from the current working directory, which in our case is ansible-aci.
-
-   ansible-galaxy collection install cisco-aci-* --force installs the built collection in our current working directory, ansible-aci.
-
-   cd ~/.ansible/collections/ansible_collections/cisco/aci changes our directory to aci, where tests are performed.
-
-   ansible-test sanity --docker --color --truncate 0 -v is used to run sanity tests inside Docker, which already has all the dependencies.
-
-   ansible-test network-integration --docker --color --truncate 0 -vvv --coverage aci_<your module name> is used to run integration tests inside Docker. We can either run the integration test on one module or all the modules by omitting the name altogether.
-
-   We add the --coverage option to any test command to collect code coverage data:
-   1. ansible-test coverage report
-   2. ansible-test coverage html
-   3. open ~/.ansible/collections/ansible_collections/cisco/aci/tests/output/reports/coverage/index.html
-
-   seealso::
-
-   `ACI Fundamentals: ACI Policy Model <https://www.cisco.com/c/en/us/td/docs/switches/datacenter/aci/apic/sw/1-x/aci-fundamentals/b_ACI-Fundamentals/b_ACI-Fundamentals_chapter_010001.html>`_
-       A good introduction to the ACI object model.
-   `APIC Management Information Model reference <https://developer.cisco.com/docs/apic-mim-ref/>`_
-       Complete reference of the APIC object model.
-   `APIC REST API Configuration Guide <https://www.cisco.com/c/en/us/td/docs/switches/datacenter/aci/apic/sw/2-x/rest_cfg/2_1_x/b_Cisco_APIC_REST_API_Configuration_Guide.html>`_
-       Detailed guide on how the APIC REST API is designed and used, including many examples.
-
+Testing the Module
+============
+
+Now that the module is created, it is time to test it. The module can be tested using the Ansible playbook. The playbook (main.yml) is added in the collection under tests/integration/targets/<aci_module_name>/tasks directory. The playbook is used to test the module and ensure that it works as expected.
+  + Step 1: Under the tests/integration/targets/ create a folder with the name of the module being created. For example, replace <aci_module_name> with aci_l3out_logical_node.
+  + Step 2: Under the <aci_module_name> directory copy paste the aliases file from any other module folder under tests/integration/targets/.
+  + Step 3: Under the <aci_module_name> directory create a folder named tasks.
+    + Step 4: Under the tasks directory create a file named main.yml. Preferred name for the file is main.yml.
+    + In main.yml add tasks to test the module. The preferred order of tasks is:
+        * Create, update, query and delete the object.
+            * Create tasks include 3 tasks with check_mode, regular_run and idempotency
+                * 2 types of create tasks are supported:
+                    + Create a new object with all the parameters.
+                    + Create a new object with only the required parameters.
+            * Update tasks include 3 tasks with check_mode, regular_run and idempotency
+            * Query tasks include 2 tasks; one to query a specific object and another to query all objects of the class.
+            * Delete tasks include 3 tasks with check_mode, regular_run and idempotency
+
+For complete guidelines on how to write the playbook, refer to `Testing the modules <testing_modules>`_ documentation.
+
+**Note**:
+
+  - A newline should be added at the end of the file to ensure that the file ends with a newline character, which is a good practice in Python coding.
+  - Avoid using whitespaces or tabs at the end of lines, as this can lead to syntax errors or unexpected behavior in Python.
+  - If aci_module_name.py file under the plugins/modules directory was used to create the new module, then remove all the comments in the file, except the copyright section at the top (first 5 lines) of the file. The comments in the aci_module_name.py file are only for reference and should not be included in the new module.
+
+Checks before making a Pull Request
+------------------------------------------------
+
+Before making a pull request, ensure that the following checks are performed:
+1. The module is tested using the Ansible playbook in the tests/integration/targets/<aci_module_name>/tasks directory. Use the sanity and black tests to ensure that the module is working as expected.
+2. The module has the necessary code coverage.
+3. The commit message is clear and concise, following the `Ansible commit message guidelines <https://docs.ansible.com/ansible/latest/dev_guide/developing_modules_general.html#commit-message-guidelines>`_.
+    * The commit message should begin with "[<commit_type>] Short description of the changes."
+        + <commit_type> can be one of the following: 
+            + [minor_changes] for small changes made in the module which doesn't affect the current functionality.
+            + [major_changes] for changes made in the module which affects the current working code(breaking changes).
+            + [bugfix] for changes made to fix a bug in the module.
+            + [docs] for changes made only to the documentation of the module.
+            + [tests] for changes made to the tests of the module.
+            + [ignore] for commit made after the initial commit which includes fixing sanity or whitespaces or spelling mistakes.
+
+**Note**:
+
+  `ACI Fundamentals: ACI Policy Model <https://www.cisco.com/c/en/us/td/docs/switches/datacenter/aci/apic/sw/1-x/aci-fundamentals/b_ACI-Fundamentals/b_ACI-Fundamentals_chapter_010001.html>`_
+      A good introduction to the ACI object model.
+  `APIC Management Information Model reference <https://developer.cisco.com/docs/apic-mim-ref/>`_
+      Complete reference of the APIC object model.
+  `APIC REST API Configuration Guide <https://www.cisco.com/c/en/us/td/docs/switches/datacenter/aci/apic/sw/2-x/rest_cfg/2_1_x/b_Cisco_APIC_REST_API_Configuration_Guide.html>`_
+      Detailed guide on how the APIC REST API is designed and used, including many examples.  
