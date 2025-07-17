@@ -89,10 +89,10 @@ Documentation Section
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 3. In the documentation section, begin by changing the name of the module, its short description, and the description of the functions being performed on the object. The description of the module must be followed by the options, which is a list of attributes. Each attribute should include the name, description, data type, aliases (if applicable), choices (if applicable), and default (if applicable) of all the parameters that will be consumed by the object.
- * The options section includes all the parameters that will be defined in the argument_spec, such as the object_id, configurable properties of the object, parent object_id, state, etc., and these need to be documented in the same file as the module in the DOCUMENTATION section.
-    + Description must be clear and concise, providing enough detail for users to understand the purpose and usage of the object.
-    + Description must include specific details about the object, such as its purpose, how it is used, and any important considerations.
-    + For example,
+* The options section includes all the parameters that will be defined in the argument_spec, such as the object_id, configurable properties of the object, parent object_id, state, etc., and these need to be documented in the same file as the module in the DOCUMENTATION section.
+    * Description must be clear and concise, providing enough detail for users to understand the purpose and usage of the object.
+    * Description must include specific details about the object, such as its purpose, how it is used, and any important considerations.
+    * For example,
         + The APIC defaults to C(default_value) when unset during creation. Explains that when an object value is not explicitly provided in a task, the APIC automatically assigns a default value to that object.
         + The object_prop1 must be a valid choice from the list: [choice1, choice2, choice3]. This explains that the values for object_prop1 must be one of the specified choices.
         + The object_prop1 must be in the range 1 to 100. The default value is 50.
@@ -102,9 +102,9 @@ Documentation Section
 
     **Note**: If a parameter is required in some states but not in others, then it should **not** be marked as required: true. Instead, it should be added in the argument_spec with the appropriate required_if conditions.
 
- * The options section must be followed by the extends_documentation_fragment section, which is used to include the common reusable documentation fragments for all ACI modules.
-    + **plugins/doc_fragments** directory of the collection contain the common documentation fragments; these are mentioned in the extends_documentation_fragment section.
-    + This includes the cisco.aci.aci fragment, which contains the common parameters used in all ACI modules.
+* The options section must be followed by the extends_documentation_fragment section, which is used to include the common reusable documentation fragments for all ACI modules.
+    * **plugins/doc_fragments** directory of the collection contain the common documentation fragments; these are mentioned in the extends_documentation_fragment section.
+    * This includes the cisco.aci.aci fragment, which contains the common parameters used in all ACI modules.
         + cisco.aci.annotation is added to the extends_documentation_fragment section if the module supports the annotation parameter.
         + cisco.aci.owner is added to the extends_documentation_fragment section if the module supports the owner parameter.
 
@@ -175,8 +175,8 @@ Examples Section
 
 5. The examples section of the copied module should be modified by adding the necessary parameters to all the examples. Please note that removing and querying an object will only contain the object name and no object parameters. "Query All" will not have any parameters other than the one that are set to required, ensuring that all the objects of the class being worked upon are returned.
 
-  - The examples section must consist of Ansible tasks which can be used as a reference to build playbooks.
-  - The example section must include CRUD operations that can be performed using the module. It should include examples for adding, updating, querying, and removing an object. Each example should include the required parameters and the expected state of the object.
+* The examples section must consist of Ansible tasks which can be used as a reference to build playbooks.
+* The example section must include CRUD operations that can be performed using the module. It should include examples for adding, updating, querying, and removing an object. Each example should include the required parameters and the expected state of the object.
 The format of this section is shown below:
 
 .. code-block:: yaml
@@ -229,9 +229,9 @@ The RETURN section is used in every module and has the same content, so copy and
 .. code-block:: python
 
   RETURN = r"""
-current:
-  ...
-"""
+    current:
+      ...
+  """
 
 Importing objects from Python libraries
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -246,8 +246,8 @@ The following imports are standard across ACI modules:
     from ansible.module_utils.aci.plugins.module_utils.aci import ACIModule, aci_argument_spec
 
 
-**ansible.module_utils.aci** is used to import the superclass ACIModule and the aci_argument_spec definition from the library aci.py in the module_utils directory mentioned earlier. ACIModule is imported because it has basic functions to make API requests and other capabilities that allow modules to manipulate objects. The aci.py library also contains a generic argument definition called **aci_argument_spec**. It is used by all the modules and allows them to accept shared parameters such as username and password.
-  - **aci_annotation_spec** and **aci_owner_spec** are also imported for modules supporting annotation and owner parameters, respectively. Add this only if used by the module.
+- **ansible.module_utils.aci** is used to import the superclass ACIModule and the aci_argument_spec definition from the library aci.py in the module_utils directory mentioned earlier. ACIModule is imported because it has basic functions to make API requests and other capabilities that allow modules to manipulate objects. The aci.py library also contains a generic argument definition called **aci_argument_spec**. It is used by all the modules and allows them to accept shared parameters such as username and password.
+- **aci_annotation_spec** and **aci_owner_spec** are also imported for modules supporting annotation and owner parameters, respectively. Add this only if used by the module.
 
 Similarly, the AnsibleModule is imported, which contains common code for quickly building an Ansible module in Python.
 
@@ -296,7 +296,7 @@ To understand what argument_spec is and how it is used, refer to the `Ansible do
             state=dict(type='str', default='present', choices=['absent', 'present', 'query']),
         )
 
-**Note**: It is recommended not to provide default values for configuration arguments. Default values could cause unintended changes to the object.
+  **Note**: It is recommended not to provide default values for configuration arguments. Default values could cause unintended changes to the object.
 
 Using the AnsibleModule object
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -373,38 +373,38 @@ The ``construct_url()`` method is used to dynamically build the REST API URL and
 
 The ``construct_url()`` method takes 2 required arguments and 7 optional arguments; the first 6 optional arguments are subclasses of the root class, and the last argument is a list of child classes. The method builds the URL and filter string based on the provided arguments, allowing for flexible querying of ACI objects.
 
-    The required arguments of the method ``construct_url()`` are:
-        * **self** - passed automatically with the class instance
-        * **root_class** - A dictionary consisting of ``aci_class``, ``aci_rn``, ``target_filter``, and ``module_object`` keys
+The required arguments of the method ``construct_url()`` are:
+* **self** - passed automatically with the class instance
+* **root_class** - A dictionary consisting of ``aci_class``, ``aci_rn``, ``target_filter``, and ``module_object`` keys
 
-        + **aci_class**: The name of the class used by the APIC.
+  + **aci_class**: The name of the class used by the APIC.
 
-        + **aci_rn**: The relative name of the object.
+  + **aci_rn**: The relative name of the object.
 
-        + **target_filter**: A dictionary with key-value pairs that make up the query string for selecting a subset of entries.
+  + **target_filter**: A dictionary with key-value pairs that make up the query string for selecting a subset of entries.
 
-        + **module_object**: The particular object for this class.
+  + **module_object**: The particular object for this class.
 
             Some modules, like ``aci_tenant``, are the root class and so would not need to pass any additional arguments to the method.
 
-    The optional arguments of the method ``construct_url()`` are:
+The optional arguments of the method ``construct_url()`` are:
 
-        * subclass_1 - A dictionary consisting of ``aci_class``, ``aci_rn``, ``target_filter``, and ``module_object`` keys
+* subclass_1 - A dictionary consisting of ``aci_class``, ``aci_rn``, ``target_filter``, and ``module_object`` keys
 
-        * subclass_2 - A dictionary consisting of ``aci_class``, ``aci_rn``, ``target_filter``, and ``module_object`` keys
+* subclass_2 - A dictionary consisting of ``aci_class``, ``aci_rn``, ``target_filter``, and ``module_object`` keys
 
-        * subclass_3 - A dictionary consisting of ``aci_class``, ``aci_rn``, ``target_filter``, and ``module_object`` keys
+* subclass_3 - A dictionary consisting of ``aci_class``, ``aci_rn``, ``target_filter``, and ``module_object`` keys
 
-        * subclass_4 - A dictionary consisting of ``aci_class``, ``aci_rn``, ``target_filter``, and ``module_object`` keys
+* subclass_4 - A dictionary consisting of ``aci_class``, ``aci_rn``, ``target_filter``, and ``module_object`` keys
 
-        * subclass_5 - A dictionary consisting of ``aci_class``, ``aci_rn``, ``target_filter``, and ``module_object`` keys
+* subclass_5 - A dictionary consisting of ``aci_class``, ``aci_rn``, ``target_filter``, and ``module_object`` keys
 
-        * subclass_6 - A dictionary consisting of ``aci_class``, ``aci_rn``, ``target_filter``, and ``module_object`` keys
+* subclass_6 - A dictionary consisting of ``aci_class``, ``aci_rn``, ``target_filter``, and ``module_object`` keys
 
-        * child_classes - The list of APIC names for the child classes supported by the modules.
-            + This is a list, even if it contains only one item.
-            + These are the child class object names used by the APIC.
-            + These are used to limit the returned child_classes when possible.
+* child_classes - The list of APIC names for the child classes supported by the modules.
+    + This is a list, even if it contains only one item.
+    + These are the child class object names used by the APIC.
+    + These are used to limit the returned child_classes when possible.
 
 **Note**:
     * The ``aci_rn`` is the relative name of the object, which is one section of the distinguished name (DN) that uniquely identifies the object in the ACI fabric. It should not contain the entire DN, as the method will automatically construct the full DN using the provided RNs of all arguments.
@@ -492,10 +492,12 @@ Performing the request
 Note - aci_rn must not contain the DN of the individual class. It is construct_url()'s task to build the entire DN leading to the target object using the series of RNs in the root class and the subsequent subclasses.
 
 14. ``get_diff()`` method takes one required argument, ``aci_class``, which is the APIC name for the class of the object being configured. The get_diff() method compares the existing configuration with the proposed configuration and returns a dictionary of the differences. Replace ``<object APIC class>`` with the appropriate APIC class name for the object being configured.
-        + The ``get_diff()`` method is used to perform the diff and takes only one required argument, ``aci_class``. In other words, it is used to make a comparison between the ACI payload and the existing configuration, and only create what's actually needed between the two.
-        + ``required_properties`` parameter in the ``get_diff()``function is used to ensure that certain essential properties are always included in the configuration difference output, even if they are not part of the changed attributes. When there is a difference between the proposed and existing configurations, and if required_properties is provided as a dictionary, its key-value pairs are added to the configuration dictionary before it is finalized. This guarantees that these required properties are present in the resulting configuration update sent to the APIC, supporting consistent and complete configuration management.
 
-    ``post_config()`` method is used to make the POST request to the APIC by taking the result from ``get_diff()``. This method doesn't take any arguments and handles check mode.
+* The ``get_diff()`` method is used to perform the diff and takes only one required argument, ``aci_class``. In other words, it is used to make a comparison between the ACI payload and the existing configuration, and only create what's actually needed between the two.
+
+  * ``required_properties`` parameter in the ``get_diff()``function is used to ensure that certain essential properties are always included in the configuration difference output, even if they are not part of the changed attributes. When there is a difference between the proposed and existing configurations, and if required_properties is provided as a dictionary, its key-value pairs are added to the configuration dictionary before it is finalized. This guarantees that these required properties are present in the resulting configuration update sent to the APIC, supporting consistent and complete configuration management.
+
+*``post_config()`` method is used to make the POST request to the APIC by taking the result from ``get_diff()``. This method doesn't take any arguments and handles check mode.
 
 Example code
 """"""""""""
@@ -553,11 +555,11 @@ Testing the Module
 ============
 
 Now that the module is created, it is time to test it. The module can be tested using the Ansible playbook. The playbook (main.yml) is added in the collection under tests/integration/targets/<aci_module_name>/tasks directory. The playbook is used to test the module and ensure that it works as expected.
-  + Step 1: Under the tests/integration/targets/ create a folder with the name of the module being created. For example, replace <aci_module_name> with aci_l3out_logical_node.
-  + Step 2: Under the <aci_module_name> directory copy paste the aliases file from any other module folder under tests/integration/targets/.
-  + Step 3: Under the <aci_module_name> directory create a folder named tasks.
-    + Step 4: Under the tasks directory create a file named main.yml. Preferred name for the file is main.yml.
-    + In main.yml add tasks to test the module. The preferred order of tasks is:
+* Step 1: Under the tests/integration/targets/ create a folder with the name of the module being created. For example, replace <aci_module_name> with aci_l3out_logical_node.
+* Step 2: Under the <aci_module_name> directory copy paste the aliases file from any other module folder under tests/integration/targets/.
+* Step 3: Under the <aci_module_name> directory create a folder named tasks.
+* Step 4: Under the tasks directory create a file named main.yml. Preferred name for the file is main.yml.
+    * In main.yml add tasks to test the module. The preferred order of tasks is:
         * Create, update, query and delete the object.
             * Create tasks include 3 tasks with check_mode, regular_run and idempotency
                 * 2 types of create tasks are supported:
@@ -569,11 +571,11 @@ Now that the module is created, it is time to test it. The module can be tested 
 
 For complete guidelines on how to write the playbook, refer to `Testing the modules <testing_modules>`_ documentation.
 
-**Note**:
-
-  - A newline should be added at the end of the file to ensure that the file ends with a newline character, which is a good practice in Python coding.
-  - Avoid using whitespaces or tabs at the end of lines, as this can lead to syntax errors or unexpected behavior in Python.
-  - If aci_module_name.py file under the plugins/modules directory was used to create the new module, then remove all the comments in the file, except the copyright section at the top (first 5 lines) of the file. The comments in the aci_module_name.py file are only for reference and should not be included in the new module.
+  **Note**:
+  
+    - A newline should be added at the end of the file to ensure that the file ends with a newline character, which is a good practice in Python coding.
+    - Avoid using whitespaces or tabs at the end of lines, as this can lead to syntax errors or unexpected behavior in Python.
+    - If aci_module_name.py file under the plugins/modules directory was used to create the new module, then remove all the comments in the file, except the copyright section at the top (first 5 lines) of the file. The comments in the aci_module_name.py file are only for reference and should not be included in the new module.
 
 Checks before making a Pull Request
 ------------------------------------------------
