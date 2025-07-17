@@ -89,10 +89,11 @@ Documentation Section
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 3. In the documentation section, begin by changing the name of the module, its short description, and the description of the functions being performed on the object. The description of the module must be followed by the options, which is a list of attributes. Each attribute should include the name, description, data type, aliases (if applicable), choices (if applicable), and default (if applicable) of all the parameters that will be consumed by the object.
+
 * The options section includes all the parameters that will be defined in the argument_spec, such as the object_id, configurable properties of the object, parent object_id, state, etc., and these need to be documented in the same file as the module in the DOCUMENTATION section.
-    * Description must be clear and concise, providing enough detail for users to understand the purpose and usage of the object.
-    * Description must include specific details about the object, such as its purpose, how it is used, and any important considerations.
-    * For example,
+* Description must be clear and concise, providing enough detail for users to understand the purpose and usage of the object.
+* Description must include specific details about the object, such as its purpose, how it is used, and any important considerations.
+* For example,
         + The APIC defaults to C(default_value) when unset during creation. Explains that when an object value is not explicitly provided in a task, the APIC automatically assigns a default value to that object.
         + The object_prop1 must be a valid choice from the list: [choice1, choice2, choice3]. This explains that the values for object_prop1 must be one of the specified choices.
         + The object_prop1 must be in the range 1 to 100. The default value is 50.
@@ -277,9 +278,9 @@ To understand what argument_spec is and how it is used, refer to the `Ansible do
 * the object_id of each parent up to the root (usually the name)
 * The child classes that have a 1-to-1 relationship with the main object do not need their own dedicated module and can be incorporated into the parent module. If the relationship is 1-to-many/many-to-many, this child class will require a dedicated module. In some corner cases, deviations from this pattern might occur.
 * the state
-  + ``state: absent`` to ensure the object does not exist
-  + ``state: present`` to ensure the object and configurations exist; this is also the default
-  + ``state: query`` to retrieve information about a specific object or all objects of the class
+  * ``state: absent`` to ensure the object does not exist
+  * ``state: present`` to ensure the object and configurations exist; this is also the default
+  * ``state: query`` to retrieve information about a specific object or all objects of the class
 
 .. code-block:: python
 
@@ -296,7 +297,7 @@ To understand what argument_spec is and how it is used, refer to the `Ansible do
             state=dict(type='str', default='present', choices=['absent', 'present', 'query']),
         )
 
-  **Note**: It is recommended not to provide default values for configuration arguments. Default values could cause unintended changes to the object.
+**Note**: It is recommended not to provide default values for configuration arguments. Default values could cause unintended changes to the object.
 
 Using the AnsibleModule object
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -374,6 +375,7 @@ The ``construct_url()`` method is used to dynamically build the REST API URL and
 The ``construct_url()`` method takes 2 required arguments and 7 optional arguments; the first 6 optional arguments are subclasses of the root class, and the last argument is a list of child classes. The method builds the URL and filter string based on the provided arguments, allowing for flexible querying of ACI objects.
 
 The required arguments of the method ``construct_url()`` are:
+
 * **self** - passed automatically with the class instance
 * **root_class** - A dictionary consisting of ``aci_class``, ``aci_rn``, ``target_filter``, and ``module_object`` keys
 
@@ -406,10 +408,10 @@ The optional arguments of the method ``construct_url()`` are:
     + These are the child class object names used by the APIC.
     + These are used to limit the returned child_classes when possible.
 
-**Note**:
-    * The ``aci_rn`` is the relative name of the object, which is one section of the distinguished name (DN) that uniquely identifies the object in the ACI fabric. It should not contain the entire DN, as the method will automatically construct the full DN using the provided RNs of all arguments.
-    * RN is one section of DN, with the ID of the specific argument. Do not put the entire DN in the **aci_rn** of each argument. The method automatically constructs the DN using the RN of all the arguments above.
-    * Refer to the modules aci_l3out_static_routes_nexthop for creation of object (ip:NexthopP) and aci_l3out_hsrp_secondary_vip for creation of object (hsrp:SecVip) for insights on how to use the ``construct_url()`` method.
+  **Note**:
+      * The ``aci_rn`` is the relative name of the object, which is one section of the distinguished name (DN) that uniquely identifies the object in the ACI fabric. It should not contain the entire DN, as the method will automatically construct the full DN using the provided RNs of all arguments.
+      * RN is one section of DN, with the ID of the specific argument. Do not put the entire DN in the **aci_rn** of each argument. The method automatically constructs the DN using the RN of all the arguments above.
+      * Refer to the modules aci_l3out_static_routes_nexthop for creation of object (ip:NexthopP) and aci_l3out_hsrp_secondary_vip for creation of object (hsrp:SecVip) for insights on how to use the ``construct_url()`` method.
 
 Example:
 
@@ -489,7 +491,7 @@ Performing the request
 """"""""""""""""""""""
 13. When state is present, a payload needs to be constructed which will be posted to APIC. Payload takes class_config and child_config. The class_config has the main attributes. If new attributes are added in new versions of APIC, that attribute will be added to class_config only if it is assigned a value.
 
-Note - aci_rn must not contain the DN of the individual class. It is construct_url()'s task to build the entire DN leading to the target object using the series of RNs in the root class and the subsequent subclasses.
+  **Note** - aci_rn must not contain the DN of the individual class. It is construct_url()'s task to build the entire DN leading to the target object using the series of RNs in the root class and the subsequent subclasses.
 
 14. ``get_diff()`` method takes one required argument, ``aci_class``, which is the APIC name for the class of the object being configured. The get_diff() method compares the existing configuration with the proposed configuration and returns a dictionary of the differences. Replace ``<object APIC class>`` with the appropriate APIC class name for the object being configured.
 
@@ -497,7 +499,7 @@ Note - aci_rn must not contain the DN of the individual class. It is construct_u
 
   * ``required_properties`` parameter in the ``get_diff()``function is used to ensure that certain essential properties are always included in the configuration difference output, even if they are not part of the changed attributes. When there is a difference between the proposed and existing configurations, and if required_properties is provided as a dictionary, its key-value pairs are added to the configuration dictionary before it is finalized. This guarantees that these required properties are present in the resulting configuration update sent to the APIC, supporting consistent and complete configuration management.
 
-*``post_config()`` method is used to make the POST request to the APIC by taking the result from ``get_diff()``. This method doesn't take any arguments and handles check mode.
+* ``post_config()`` method is used to make the POST request to the APIC by taking the result from ``get_diff()``. This method doesn't take any arguments and handles check mode.
 
 Example code
 """"""""""""
