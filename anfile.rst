@@ -86,7 +86,7 @@ The purpose of this section is to illustrate how to build a module based on an e
   }
 
 Documentation Section
-~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 3. In the documentation section, begin by changing the name of the module, its short description, and the description of the functions being performed on the object. The description of the module must be followed by the options, which is a list of attributes. Each attribute should include the name, description, data type, aliases (if applicable), choices (if applicable), and default (if applicable) of all the parameters that will be consumed by the object.
  * The options section includes all the parameters that will be defined in the argument_spec, such as the object_id, configurable properties of the object, parent object_id, state, etc., and these need to be documented in the same file as the module in the DOCUMENTATION section.
@@ -171,7 +171,7 @@ The format of documentation is shown below:
       """
 
 Examples Section
-----------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 5. The examples section of the copied module should be modified by adding the necessary parameters to all the examples. Please note that removing and querying an object will only contain the object name and no object parameters. "Query All" will not have any parameters other than the one that are set to required, ensuring that all the objects of the class being worked upon are returned.
 
@@ -223,7 +223,7 @@ The format of this section is shown below:
 .. note:: Ensure to test the examples since users generally copy and paste examples to use the module.
 
 Return Section
-----------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 The RETURN section is used in every module and has the same content, so copy and paste it from any module and do not modify it
 
 .. code-block:: python
@@ -234,7 +234,7 @@ current:
 """
 
 Importing objects from Python libraries
----------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 7. The following import section is generally left untouched, but if a shared method is added in the library, it might need to be imported here.
 
@@ -265,7 +265,7 @@ To understand more about the AnsibleModule, refer to the `Ansible documentation 
 The imported constants from plugins/module_utils/constants.py file define the collection of fixed values and mapping dictionaries used to standardize and normalize for ACI-specific parameters.
 
 Defining the argument_spec variable
------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 8. In the main function, the argument_spec variable defines all the arguments necessary for this module and is based on aci_argument_spec. All arguments defined previously in the documentation section are added to this variable.
 
 The **argument_spec** variable is based on **aci_argument_spec** and allows a module to accept additional parameters from the user specific to the module.
@@ -299,7 +299,7 @@ To understand what argument_spec is and how it is used, refer to the `Ansible do
 **Note**: It is recommended not to provide default values for configuration arguments. Default values could cause unintended changes to the object.
 
 Using the AnsibleModule object
-------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 The following section creates an instance of AnsibleModule and then adds to the constructor a series of properties such as the argument_spec. The module should support check-mode, which validates the working of a module without making any changes to the ACI object. The first attribute passed to the constructor is ``argument_spec``; the second argument is ``supports_check_mode``. It is highly recommended that every module support check mode in this collection. The last element is required_if, which is used to specify conditional required attributes, and since these modules support querying the APIC for all objects of the module's class, the object/parent IDs should only be required if ``state: absent`` or ``state: present``.
 
 .. code-block:: python
@@ -316,7 +316,7 @@ The following section creates an instance of AnsibleModule and then adds to the 
 9. The required_if variable has the following arguments. These arguments are not set for all states because "Query All" does not require them. However, users are still required to provide these arguments when creating or deleting something. This is why they are included in required_if, which specifies which attributes are required when state is present or absent. If any of the attributes in required_if are missing in the task that adds or deletes the object in the playbook, Ansible will immediately warn the user that the attributes are missing.
 
 Mapping variable definition
----------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 10. The above instantiation (required for all modules) is followed by code that is used to get attributes from the playbook that correspond to all the properties of objects defined in the main() function above. This is also where validations and string concatenations are performed.
 
 Once the AnsibleModule object has been instantiated as module, the necessary parameter values should be extracted from the ``module.params`` dictionary and all additional data should be validated. Usually, the only parameters that need to be extracted are those related to the ACI object configuration and its child configuration. If integer objects require validation, then the validation should be performed here.
@@ -338,7 +338,7 @@ Once the AnsibleModule object has been instantiated as module, the necessary par
   * Most type conversions, checks and validations that are done at this level are minimal and are usually done to ensure the the correct formatted data is passed further down the code.
 
 Using the ACIModule object
---------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 The ACIModule class handles most of the logic for the ACI modules. The ACIModule extends the functionality of the AnsibleModule object, so the module instance must be passed into the class instantiation.
 
 .. code-block:: python
@@ -358,7 +358,7 @@ The ACIModule has 7 main methods that are used by most modules in the collection
 The first 2 methods are used regardless of what value is passed to the ``state`` parameter.
 
 Constructing URLs
-^^^^^^^^^^^^^^^^^
+''''''''''''''''''
 11. The following section constructs a filter to target a set of entries that match certain criteria at the level of the target DN and in the subtree below it. The construct_url function below is used to build the appropriate DN by using the tenant as the root class and other subsequent subclasses up to object of the module.
 
 The ``construct_url()`` method is used to dynamically build the REST API URL and query parameters to retrieve or configure ACI objects at various levels of the object hierarchy, supporting flexible depth and child class filtering for APIC requests.
